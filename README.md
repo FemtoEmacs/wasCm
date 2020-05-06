@@ -108,3 +108,20 @@ tutorial of Bigloo, one of the languages supported
 by Manoel Serrano's Hop web programming environment.
 Finally, there is the ongoing work on an LLL compiler.
 
+## Demos of simple programs
+The first link shows the *greet* script, described in
+chapter 9 of the documentation. 
+
+http://medicina.tips/big/greet.k?xnome=%E9%82%93%E5%B0%8F%E5%B9%B3
+
+The wasmdemo application is a very simple demonstration of how
+to deploy a web page that loads an wasm program. This example
+is discussed on chapter 4 of the documentation.
+
+http://medicina.tips/big/wasmdemo.html
+
+This demo shows a naive factorial benchmark that was programmed
+in Low Level Lisp and compiled to wasm through the wasCm
+compiler.
+
+http://medicina.tips/big/nfib.html
