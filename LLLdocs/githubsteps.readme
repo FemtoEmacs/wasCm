@@ -1,0 +1,3 @@
+$ git add .
+$ git commit -m "First draft"
+$ git push origin master
