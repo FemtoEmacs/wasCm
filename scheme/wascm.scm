@@ -29,20 +29,18 @@
   (match-case d
      [(? number?) (compile-number d env)]
      [(? symbol?) (compile-symbol d env)]
-     [(+ ?l ?r) (compile-add l r env)]
-     [(- ?l ?r) (compile-minus l r env)]
-     [(* ?l ?r) (compile-multiply l r env)]
-     [(/ ?l ?r) (compile-divide l r env)]
-     [(= ?l ?r) (compile-equal l r env)]
-     [(/= ?l ?r) (compile-unequal l r env)]
-     [(> ?l ?r) (compile-greater l r env)]
-     [(>= ?l ?r) (compile-greater-equal l r env)]
-     [(< ?l ?r) (compile-less l r env)]
-     [(<= ?l ?r) (compile-less-equal l r env)]
-     [(define- (?name . ?params) . ?body)
-       (compile-define- name params body '())]
-     [(define+ (?name . ?params) . ?body)
-       (compile-define+ name params body '())]
+     [(fx+ ?l ?r) (compile-add l r env)]
+     [(fx- ?l ?r) (compile-minus l r env)]
+     [(fx* ?l ?r) (compile-multiply l r env)]
+     [(fx/ ?l ?r) (compile-divide l r env)]
+     [(fx= ?l ?r) (compile-equal l r env)]
+     [(fx/= ?l ?r) (compile-unequal l r env)]
+     [(fx> ?l ?r) (compile-greater l r env)]
+     [(fx>= ?l ?r) (compile-greater-equal l r env)]
+     [(fx< ?l ?r) (compile-less l r env)]
+     [(fx<= ?l ?r) (compile-less-equal l r env)]
+     [(define (?name . ?params) . ?body)
+       (compile-define name params body '())]
      [(if ?cond ?exp1 ?exp2) (compile-if-then-else cond exp1 exp2 env)]
      [(local [?name ?exp] . ?body)
       (compile-local name exp body env)]
@@ -143,18 +141,7 @@
 	    (nxt (cdr s) e
 	       (cons exp result))) )))
 
-(define (compile-define- name params body env)
-  (multiple-value-bind (body env) (compile* body env)
-    (let* [ (params (apply append
-                      (map (lambda(param) 
-                             `((param ,($ param) i32))) params)))
-            (locals (apply append 
-                      (map (lambda(name) 
-                             `((local ,($ name) i32))) env)))]  
-    (values `((func ,($ name) ,@params (result i32) 
-                    ,@locals ,@body)) env)) ))
-
-(define (compile-define+ name ps body env)
+(define (compile-define name ps body env)
   (multiple-value-bind (body env) (compile* body env)
     (let* ( (params (apply append
 		       (map (lambda (p) `((param ,($ p) i32))) ps)))
