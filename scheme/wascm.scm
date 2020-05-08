@@ -21,7 +21,7 @@
          [src (read i)])
     (write src)
     (multiple-value-bind (c env) (compile src (list))
-      (write c o)
+      (pp c o)
       (newline o) (newline o)
       (close-output-port o))))
 
@@ -52,6 +52,8 @@
       (compile-set ind v env)]
      [(mem ?pages)
       (compile-mem pages env)]
+     [(data ?mempos ?maxsize . ?body)
+      (compile-data mempos maxsize body)]
      [(module . ?body ) (compile-module body env)]
      [(?name . ?params) (compile-call name params env)] ))
  
@@ -185,3 +187,37 @@
    (multiple-value-bind (body env) (compile* body newenv )
      (let [(body (apply append body))]
        (values `(block (result i32) ,@exps ,body) env)) )))
+
+(define (compile-data mempos maxsize body)
+  `(,@(compila-data-declaration mempos maxsize body)
+    ,(compila-data-initialize mempos maxsize body)
+    (export "initstr" (func $initstr))
+    ,@(compile-pos mempos maxsize)))
+
+(define (compila-data-declaration mempos maxsize body)
+  (let loop [(pos mempos) (s body) (acc '())]
+    (cond [(null? s) (reverse acc)]
+	  [(string? (car s))
+	   (loop (+ pos maxsize) (cdr s)
+		 (cons `(data (i32.const ,(+ pos 4)) ,(car s)) acc))]
+	  [else (error "in data section" body (car s))])))
+
+(define (compila-data-initialize mempos maxsize body)
+  (let loop [(pos mempos) (s body) (acc '()) ]
+	(cond [(null? s) `(func $initstr (result) ,@(reverse acc))]
+	      [(string? (car s))
+	       (loop (+ pos maxsize)
+		     (cdr s)
+		     (cons `(i32.store (i32.const ,pos)
+				       (i32.const ,(string-length (car s)) ))
+			   acc))]
+	      [else (error "in data section" body (car s))])))
+	      
+(define (compile-pos mempos maxsize)
+  `( (func $pos (param $n i32) (result i32)
+	   (i32.add (i32.const ,mempos)
+	      (i32.mul (local.get $n) (i32.const ,maxsize)) ))
+     (export "pos" (func $pos))
+     (func $getsz (param $n i32) (result i32)
+	   (i32.load (call $pos (local.get $n) ) ) )
+     (export "getsize" (func $getsz)) ))
