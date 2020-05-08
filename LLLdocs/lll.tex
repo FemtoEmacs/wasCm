@@ -1915,7 +1915,7 @@ run();
 \end{verbatim}
 
 \caption{Javascript client}
-\label{wasm:node}
+\label{wasm:client}
 \end{figure}
 
 As I said before, wasm uses the same syntax
@@ -2132,6 +2132,278 @@ Here is how to compile and run the application above.
 AAAA
 BBBB
 \end{verbatim}
+
+\section{Strings}
+Strings are sequence of chars. WebAssembly
+implements strings practically out of the box.
+In figure~\ref{wasm:strings}, you can see a simple
+implementation of strings in WebAssembly.
+\begin{figure}[!h]
+\begin{verbatim}
+(module
+  (memory (export "mem") 1)
+
+  (data (i32.const 1004) "String demo.")
+  (data (i32.const 1204) "Hello, you Guys!")
+
+  (func $initstr (result)
+     (i32.store (i32.const 1000) (i32.const 12))
+     (i32.store (i32.const 1200) (i32.const 15)))
+
+  (export "initstr"  (func $initstr))
+ 
+  (func $setmem (param $n i32) (param $v i32)  (result)
+     (i32.store  (local.get $n) (local.get $v)))
+  
+  (export "set" (func $setmem))
+
+  (func $getsz (param $n i32) (result i32)
+    (i32.load (local.get $n)))
+
+  (export "getsize" (func $getsz))
+
+ (global (export "pos") i32 (i32.const 1000)))
+\end{verbatim}
+  \caption{Strings: WebAssembly side -- {\tt str.wat}}
+  \label{wasm:strings}
+\end{figure}
+
+The \verb|data| declaration is used to specify
+where a string starts as well as its contents.
+In listing~\ref{wasm:strings}, there are two
+strings, one starting at position 1004 and the
+other at 1204. Function \verb|$initstr| stores
+the sizes of these two strings at positions 1000
+and 1200 respectively. This function should be
+called from Javascript, in order to initialize
+the strings with their sizes: It the example,
+the first string contains 12 bytes, which are
+stored at position 1000, while the second contains
+15 bytes, value that is stored at position 1200.
+
+The \verb|$getsz| function is exported Javascript,
+in order to retrieve the size of a string. If
+the user wants to retrieve only parn of the string,
+she can use the function \verb|$setmem| to store
+a smaller value at the string size position.
+
+\begin{figure}[!h]
+  \begin{verbatim}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+   <h2 id="htag"></h2>
+    <p id="tag"> </p>
+  
+  <script>
+function run(wasm) {
+    const m   = wasm.exports.mem;
+    wasm.exports.initstr();
+    const p = wasm.exports.pos;
+    function sz(i) { return wasm.exports.getsize(i);}
+    wasm.exports.set(1000, 11);
+    const str = new Uint8Array(m.buffer, p+204, sz(p+200));
+    const msg = new Uint8Array(m.buffer, p+4, sz(p));
+    const s = new TextDecoder('utf8').decode(str);
+    const zmsg = new TextDecoder('utf8').decode(msg);
+    document.getElementById("tag").innerHTML= s;
+    document.getElementById("htag").innerHTML= zmsg;}
+fetch("str.wasm").then(reponse =>
+    reponse.arrayBuffer()
+).then(bytes =>
+    WebAssembly.instantiate(bytes, {})
+).then(result =>
+    result.instance
+).then(run);
+  </script>
+</body>
+</html>
+  \end{verbatim}
+  \caption{Strings: Javascript side}
+  \label{javascript:strings}
+\end{figure}
+
+\section{Lists}
+The last thing that we need to implement in
+WebAssembly are singly linked lists, the
+kind of lists that exists in Lisp. In order
+to implement lists, one needs only three
+operations -- cons, car and cdr, which are
+implemented in listing~\ref{wasm:cons}
+and~\ref{wasm:selectors}.
+
+\begin{figure}[!h]
+  \begin{verbatim}
+<!DOCTYPE html>
+<html lang="en">
+<head> <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+   <h2 id="htag"></h2>
+   <p id="tag"></p>   
+<script>
+function run(wasm) {
+ const m   = wasm.exports.mem;
+ wasm.exports.initstr();
+ const p = wasm.exports.makelist();
+ function fst(i) {return wasm.exports.car(i);}
+ function rst(i) {return wasm.exports.cdr(i);}
+ function sz(i) {return wasm.exports.getsize(i);}
+ const s = new Uint8Array(m.buffer, fst(p)+4, sz(fst(p)));
+ const zs= new TextDecoder('utf8').decode(s);
+ const msg= new Uint8Array(m.buffer, fst(rst(p))+4,
+                                 sz(fst(rst(p))));
+ const zmsg = new TextDecoder('utf8').decode(msg);
+ document.getElementById("htag").innerHTML= zmsg;
+ document.getElementById("tag").innerHTML= zs;}
+fetch("consdemo.wasm").then(reponse => reponse.arrayBuffer()
+).then(bytes => WebAssembly.instantiate(bytes, {})
+).then(result => result.instance
+).then(run);
+</script>
+</body> </html>
+  \end{verbatim}
+
+\caption{List selectors: Javascript side}
+  \label{wasm:selectors}
+\end{figure}
+
+
+\begin{figure}[!t]
+  \begin{verbatim}
+(module (memory (export "mem") 1)
+ (data (i32.const 1004) "Anne")
+ (data (i32.const 1204) "Maria")
+ (func $getsz (param $n i32) (result i32)
+   (i32.load (local.get $n)))
+ (export "getsize" (func $getsz))
+  
+ (func $newcons (result i32)
+   (i32.store (i32.const 2000)
+    (i32.add (i32.load (i32.const 2000)) (i32.const 10)) )
+    (i32.load (i32.const 2000))) 
+ (func $cons (param $hd i32) (param $tail i32) (result i32)
+  (local $n i32) (local.set $n (call $newcons))
+  (i32.store (local.get $n) (local.get $hd))
+  (i32.store (i32.add (local.get $n) (i32.const 4)) (local.get $tail))
+  (local.get $n))
+
+  (func $car (param $xs i32) (result i32)
+      (i32.load (local.get $xs)))
+  (export "car" (func $car))
+  (func $cdr (param $xs i32) (result i32)
+    (i32.load (i32.add (local.get $xs) (i32.const 4)) ))
+  (export "cdr" (func $cdr))
+
+  (func $makelist (result i32)
+     (call $cons (i32.const 1000)
+       (call $cons (i32.const 1200) (i32.const 0)) ))
+  (export "makelist" (func $makelist))
+
+  (func $initstr (result)
+     (i32.store (i32.const 2000) (i32.const 2000))
+     (i32.store (i32.const 1000) (i32.const 4))
+     (i32.store (i32.const 1200) (i32.const 5)))
+  (export "initstr"  (func $initstr))
+  (global (export "pos") i32 (i32.const 1000)))
+  \end{verbatim}
+  \caption{List constructor and selectors}
+  \label{wasm:cons}
+\end{figure}
+
+
+\section{Why do I need Low Level Lisp?}
+As you could see, dealing with strings requires
+a lot of redtape. Low Level Lisp can read
+you of this manual handling of memory.
+
+\begin{figure}[!h]
+\begin{verbatim}
+(module
+  (mem  2)
+  (data 1000 100 "Hello, World!"
+      "Hi, Suzy"))
+\end{verbatim}
+\caption{LLL source code: scmstr.web}
+\label{wasm:scmstr.web}  
+\end{figure}
+
+The line below shows how to compile the
+program of listing~\ref{wasm:scmstr.web}.
+\begin{quote}
+\begin{verbatim}
+~/src/wasCm$ scheme/wascm.x scmstr
+~/src/wasCm$ wat2wasm scmstr.wat
+\end{verbatim}
+\end{quote}
+
+Figure~\ref{wasm:scmstr.html} shows an html page that
+deploys the program of listing~\ref{wasm:scmstr.web}.
+Program of listing~\ref{wasm:scmstr.web} requires
+only what is strictly necessary to store and
+retrieve strings, to wit, the position where the
+string memory starts and the maximum size that
+a string can have, witch is 100 bytes, in the example.
+
+The compiler for Low Level Lisp is written in Bigloo
+scheme. You will find the compiler in the same repository,
+where you found this documentation. After installing
+Bigloo, in order to build the \verb|wascm.scm| source
+file, all you need is to type the line below.
+\begin{quote}
+\begin{verbatim}
+~/src/wasCm/scheme$ bigloo wascm.scm -o wascm.x
+\end{verbatim}
+\end{quote}
+Building Bigloo projects is quite easy, but people
+who are not familiar with the operating system
+can get lost in the labyrinth of paths and permissions.
+Therefore, if you are not a hacker yourself, my
+advice is to engage the help of someone who
+is conversant with a computer terminal.
+
+
+\begin{figure}[!h]
+\begin{verbatim}
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+   <h2>Test string access</h2>
+    <p id="tag"> </p>
+<script>
+function run(scmstr) {
+    const m   = scmstr.exports.mem;
+    scmstr.exports.initstr();
+    function p(i) {return scmstr.exports.pos(i)+4;}
+    function sz(i) {return scmstr.exports.getsize(i);}
+    console.log(p(0));
+    const str = new Uint8Array(m.buffer, p(1), sz(1));
+    const s = new TextDecoder('utf8').decode(str);
+    document.getElementById("tag").innerHTML= s;}
+fetch("scmstr.wasm").then(reponse =>
+    reponse.arrayBuffer()
+).then(bytes =>
+    WebAssembly.instantiate(bytes, {})
+).then(result =>
+    result.instance
+).then(run);
+  </script>
+</body>
+</html>
+\end{verbatim}
+\caption{LLL source code: scmstr.web}
+\label{wasm:scmstr.html}  
+\end{figure}
+
+
 
 
 \chapter{The man who knew Javanese}
