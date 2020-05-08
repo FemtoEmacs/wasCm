@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+   <h2 id="htag"></h2>
+    <p id="tag"> </p>
+  
+  <script>
+function main(wasm) {
+    const memory   = wasm.exports.memory;
+    const size   = wasm.exports.sz;
+    const pos = wasm.exports.pos;
+
+    const bytes = new Uint8Array(memory.buffer, pos + 1000, size);
+    const msg = new Uint8Array(memory.buffer, pos, size+14);
+    const s = new TextDecoder('utf8').decode(bytes);
+    const dmsg = new TextDecoder('utf8').decode(msg);
+    document.getElementById("tag").innerHTML= s;
+    document.getElementById("htag").innerHTML= dmsg;}
+fetch("hellomain.wasm").then(reponse =>
+    reponse.arrayBuffer()
+).then(bytes =>
+    WebAssembly.instantiate(bytes, {})
+).then(result =>
+    result.instance
+).then(main);
+  </script>
+</body>
+</html>

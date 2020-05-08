@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+   <h2 id="htag"></h2>
+   <p id="tag"></p>
+   
+  <script>
+function run(wasm) {
+    const m   = wasm.exports.mem;
+    wasm.exports.initstr();
+    const p = wasm.exports.makelist();
+    function fst(i) {return wasm.exports.car(i);}
+    function rst(i) {return wasm.exports.cdr(i);}
+    function sz(i) {return wasm.exports.getsize(i);}
+    const s = new Uint8Array(m.buffer, fst(p)+4, sz(fst(p)));
+    const zs= new TextDecoder('utf8').decode(s);
+    const msg = new Uint8Array(m.buffer, fst(rst(p))+4,
+			       sz(fst(rst(p))));
+    const zmsg = new TextDecoder('utf8').decode(msg);
+    document.getElementById("htag").innerHTML= zmsg;
+    document.getElementById("tag").innerHTML= zs;}
+    fetch("consdemo.wasm").then(reponse =>
+    reponse.arrayBuffer()
+).then(bytes =>
+    WebAssembly.instantiate(bytes, {})
+).then(result =>
+    result.instance
+).then(run);
+  </script>
+</body>
+</html>

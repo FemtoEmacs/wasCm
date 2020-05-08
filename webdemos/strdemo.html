@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+   <h2 id="htag"></h2>
+    <p id="tag"> </p>
+  
+  <script>
+function run(wasm) {
+    const m   = wasm.exports.mem;
+    wasm.exports.initstr();
+    const p = wasm.exports.pos;
+    function sz(i) { return wasm.exports.getsize(i);}
+    wasm.exports.set(1000, 11);
+    const str = new Uint8Array(m.buffer, p+204, sz(p+200));
+    const msg = new Uint8Array(m.buffer, p+4, sz(p));
+    const s = new TextDecoder('utf8').decode(str);
+    const zmsg = new TextDecoder('utf8').decode(msg);
+    document.getElementById("tag").innerHTML= s;
+    document.getElementById("htag").innerHTML= zmsg;}
+fetch("str.wasm").then(reponse =>
+    reponse.arrayBuffer()
+).then(bytes =>
+    WebAssembly.instantiate(bytes, {})
+).then(result =>
+    result.instance
+).then(run);
+  </script>
+</body>
+</html>
