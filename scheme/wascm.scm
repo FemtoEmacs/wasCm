@@ -29,19 +29,35 @@
   (match-case d
      [(? number?) (compile-number d env)]
      [(? symbol?) (compile-symbol d env)]
-     [(fx+ ?l ?r) (compile-add l r env)]
-     [(fx- ?l ?r) (compile-minus l r env)]
-     [(fx* ?l ?r) (compile-multiply l r env)]
-     [(fx/ ?l ?r) (compile-divide l r env)]
-     [(fx= ?l ?r) (compile-equal l r env)]
-     [(fx/= ?l ?r) (compile-unequal l r env)]
-     [(fx> ?l ?r) (compile-greater l r env)]
-     [(fx>= ?l ?r) (compile-greater-equal l r env)]
-     [(fx< ?l ?r) (compile-less l r env)]
-     [(fx<= ?l ?r) (compile-less-equal l r env)]
+     [(+fx ?l ?r) (compile-add 'i32.add l r env)]
+     [(-fx ?l ?r) (compile-minus 'i32.sub l r env)]
+     [(*fx ?l ?r) (compile-multiply 'i32.mul l r env)]
+     [(/fx ?l ?r) (compile-divide 'i32.div_s l r env)]
+     [(rem ?l ?r) (compile-rem 'i32.rem_s l r env)] 
+     [(+ ?l ?r) (compile-add 'f64.add l r env)]
+     [(- ?l ?r) (compile-minus 'f64.sub l r env)]
+     [(* ?l ?r) (compile-multiply 'f64.mul l r env)]
+     [(/ ?l ?r) (compile-divide 'f64.div l r env)]
+     [(=fx ?l ?r) (compile-equal 'i32.eq l r env)]
+     [(/=fx ?l ?r) (compile-unequal 'i32.ne l r env)]
+     [(>fx ?l ?r) (compile-greater 'i32.gt_s l r env)]
+     [(>=fx ?l ?r) (compile-greater-equal 'i32.ge_s l r env)]
+     [(<fx ?l ?r) (compile-less 'i32.lt_s l r env)]
+     [(<=fx ?l ?r) (compile-less-equal 'i32.le_s l r env)]
+     [(= ?l ?r) (compile-equal 'f64.eq l r env)]
+     [(/= ?l ?r) (compile-unequal 'f64.ne l r env)]
+     [(> ?l ?r) (compile-greater 'f64.gt l r env)]
+     [(>= ?l ?r) (compile-greater-equal 'f64.ge l r env)]
+     [(< ?l ?r) (compile-less 'f64.lt l r env)]
+     [(<= ?l ?r) (compile-less-equal 'f64.le l r env)]     
      [(define (?name . ?params) . ?body)
        (compile-define name params body '())]
-     [(if ?cond ?exp1 ?exp2) (compile-if-then-else cond exp1 exp2 env)]
+     [ (if ?cond ?exp1 ?exp2)
+       (compile-if-then-else '(result i32)
+		     cond exp1 exp2 env)]
+     [ (if.x ?cond ?exp1 ?exp2)
+       (compile-if-then-else '(result f64)
+		      cond exp1 exp2 env)]
      [(local [?name ?exp] . ?body)
       (compile-local name exp body env)]
      [(let ?vars . ?body)
@@ -56,9 +72,13 @@
       (compile-data mempos maxsize body)]
      [(module . ?body ) (compile-module body env)]
      [(?name . ?params) (compile-call name params env)] ))
- 
+
+
+(define (gconst x)
+  (if (and (integer? x) (exact? x)) 'i32.const 'f64.const))
+
 (define (compile-number n env)
-  (values `(i32.const ,n) env))
+  (values `(,(gconst n) ,n) env))
 
 (define (compile-symbol s env)
   (values `(get_local ,($ s)) env))
@@ -82,57 +102,63 @@
 (define ($ x)
   (string->symbol (string-append "$" (symbol->string x))))
 
-(define (str x) (symbol->string x))
+(define (str x) (prefix (symbol->string x)))
 
-(define (compile-add l r env)
+(define (compile-add sum l r env)
     (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-         (values `(i32.add ,l ,r) env)) ))
+         (values `(,sum ,l ,r) env)) ))
 
-(define (compile-minus l r env)
+(define (compile-minus sub l r env)
     (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-    (values `(i32.sub ,l ,r) env)) ))
+    (values `(,sub ,l ,r) env)) ))
 
-(define (compile-multiply l r env)
+(define (compile-multiply mul l r env)
     (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-    (values `(i32.mul ,l ,r) env)) ))
+    (values `(,mul ,l ,r) env)) ))
 
-(define (compile-divide l r env)
+(define (compile-divide div l r env)
      (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-  (values `(i32.div ,l ,r) env)) ))
+  (values `(,div ,l ,r) env)) ))
 
-(define (compile-equal l r env)
+(define (compile-rem rem l r env)
+     (multiple-value-bind (l env) (compile l env)
+      (multiple-value-bind (r env) (compile r env)
+  (values `(,rem ,l ,r) env)) ))
+
+
+(define (compile-equal pred l r env)
       (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-  (values `(i32.eq ,l ,r) env)) ))
+  (values `(,pred ,l ,r) env)) ))
 
-(define (compile-unequal l r env)
+(define (compile-unequal pred l r env)
       (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-  (values `(i32.ne ,l ,r) env)) ))
+  (values `(,pred ,l ,r) env)) ))
 
-(define (compile-greater l r env)
+(define (compile-greater pred l r env)
       (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-  (values `(i32.gt_s ,l ,r) env)) ))
+  (values `(,pred ,l ,r) env)) ))
 
-(define (compile-greater-equal l r env)
+(define (compile-greater-equal pred l r env)
       (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-  (values `(i32.ge_s ,l ,r) env)) ))
+  (values `(,pred ,l ,r) env)) ))
 
-(define (compile-less l r env)
+(define (compile-less pred l r env)
       (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-  (values `(i32.lt_s ,l ,r) env)) ))
+  (values `(,pred ,l ,r) env)) ))
 
-(define (compile-less-equal l r env)
+(define (compile-less-equal pred l r env)
     (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env) 
-    (values `(i32.le_s ,l ,r) env)) ))
+    (values `(,pred ,l ,r) env)) ))
 
 (define (compile* exps env)
   (let nxt [(s exps) (e env) (result '())]
@@ -143,23 +169,32 @@
 	    (nxt (cdr s) e
 	       (cons exp result))) )))
 
+(define (flres? x)
+  (let [(sfx (suffix (symbol->string x)))]
+    (or (string=? sfx "x")
+	(string=? sfx "y"))))
+
+(define (gr x)
+  (if (flres? x) 'f64 'i32))
+
 (define (compile-define name ps body env)
   (multiple-value-bind (body env) (compile* body env)
     (let* ( (params (apply append
-		       (map (lambda (p) `((param ,($ p) i32))) ps)))
+		       (map (lambda (p)
+			      `((param ,($ p) ,(gr p) ))) ps)))
             (locals (apply append
 		       (map (lambda (name)
 			      `((local ,($ name) i32))) env)) ))
-      (values `((func ,($ name) ,@params (result i32)
+      (values `((func ,($ name) ,@params (result ,(gr name))
 		      ,@locals ,@body)
 		(export ,(str name)
 			(func ,($ name)))) env)) ))
 
-(define (compile-if-then-else cond exp1 exp2 env)
+(define (compile-if-then-else typ cond exp1 exp2 env)
   (multiple-value-bind (cond env) (compile cond env)
   (multiple-value-bind (exp1 env) (compile exp1 env)
   (multiple-value-bind (exp2 env) (compile exp2 env)
-     (values `(if (result i32) ,cond (then ,exp1)
+     (values `(if ,typ ,cond (then ,exp1)
 		  (else ,exp2)) env)) )))
 
 (define (compile-call name params env)
