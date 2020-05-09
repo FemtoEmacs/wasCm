@@ -2404,6 +2404,175 @@ fetch("scmstr.wasm").then(reponse =>
 \end{figure}
 
 
+\chapter{Simple programs in LLL}
+
+Let us see two simple programs is Low Level Lisp,
+a language that we will call LLL from now on.
+
+\begin{figure}[!h]
+\begin{verbatim}
+;; File: fib.web
+(module
+
+ (define (fib n)
+     (if (<fx n 2)
+        1
+        (+fx (fib (-fx n 1)) (fib (-fx n 2)))))
+)
+\end{verbatim}
+  \caption{Fibonacci of fixnum integer}
+  \label{wasm:fixnum-fibonacci}
+\end{figure}
+
+Below there is a client for the program of
+listing~\ref{wasm:fixnum-Fibonacci}.
+
+\begin{figure}[!h]
+\begin{verbatim}
+const { readFileSync } = require("fs");
+const run = async () => {
+  const buffer = readFileSync("./fib.wasm");
+  const module = await WebAssembly.compile(buffer);
+  const instance = await WebAssembly.instantiate(module);
+  console.log("=== Fibonacci(40) ===");
+  console.log(instance.exports.fib(40));};
+
+run();
+\end{verbatim}
+  \caption{fib client}
+  \label{wasm:fibclient}
+\end{figure}
+
+Computers operate on many numerical types, such
+as fixnums, which are integers smaller than a certain
+value, and float numbers, which are approximations
+of real numbers. For each type there is
+a different set of arithmetic operators and
+comparison predicates. The functions \verb|+fx|,
+\verb|-fx|, \verb|*fx|, \verb|/fx| and
+\verb|rem| operate on fixnum, which means 32 bit
+integers. The same way, the predicates \verb|=fx|,
+\verb|/=fx|, \verb|>fx|, \verb|>=fx|, \verb|<fx|
+and \verb|<=fx| compare fixnum integers.
+
+
+Below, you will see how to compile and run the
+program of listing~\ref{wasm:fixnum-fibonacci}.
+The first step of the compilation process is to
+translate from Low Level Lisp to WebAssembly Text,
+or wat. This is done by a Bigloo program that
+you compiled previously, and placed the executable
+in the directory \verb|scheme|. This will generate
+the \verb|fib.wat| that needs to be compiled to
+binary code by the \verb|wat2wasm| compiler.
+\begin{verbatim}
+~/src/wasCm$ cat fib.web
+(module
+
+  (define (fib n)
+    (if (<fx n 2)
+        1
+        (+fx (fib (-fx n 1)) (fib (-fx n 2)))))
+)
+~/src/wasCm$ scheme/wascm.x fib.web
+~/src/wasCm$ wat2wasm fib.wat
+~/src/wasCm$ node fibclient.js
+=== Fibonacci(40) ===
+165580141
+\end{verbatim}
+
+The command \verb|wat2wasm fib.wat| translate the
+WebAssembly Text, or wat for short, into binary
+code that can be executed by the WebAssembly virtual
+machine. The binary file \verb|fib.wasm| receives
+the \verb|wasm| extension. There are two main ways
+to execute a \verb|wasm| file. One of them is to
+publish it on a web page, so people can enjoy the
+application on their browsers.
+
+A faster and simpler method of testing a \verb|wasm|
+program is through the node run time. Either way, you
+will need to write a Javascript client program, in
+order to call the \verb|wasm| compiled binary code.
+The first step is to load the wasm file and create a
+module for it. Then you can instantiate the module
+and call any function that it exports.
+\begin{verbatim}
+  const buffer = readFileSync("./fib.wasm");
+  const module = await WebAssembly.compile(buffer);
+  const instance = await WebAssembly.instantiate(module);
+  console.log(instance.exports.fib(40));
+\end{verbatim}
+
+\section{Floating point}
+Besides fixnum, another important numerical type in
+computer science is floating point numbers.
+
+\begin{figure}[!h]
+\begin{verbatim}
+;; File: fib.web
+(module
+
+(define (fib.x n.x)
+    (if.x (< n.x 2.0)
+        1.0
+        (+ (fib.x (- n.x 1.0)) (fib.x (- n.x 2.0))) )))
+\end{verbatim}
+  \caption{Fibonacci of a floating point number}
+  \label{wasm:float-fibonacci}
+\end{figure}
+
+Listing~\ref{wasm:float-fibonacci} shows that variables
+that will receive a floating point number must bear
+the \verb|.x| suffix. The function identifier, which is
+\verb|fib.x| in the example, must show the \verb|.x|
+suffix to specify that it returns a floating point result.
+The decimal point is mandatory for floating point
+constants. The \verb|if| form
+changes to \verb|if.x| to show that it returns a
+floating point result. Finally, floating point operations
+have an entirely new set of functions: \verb|+| for
+addition, \verb|-| for subtraction,
+\verb|/| for division and \verb|*| for multiplication. 
+Basically, floating point arithmetic operations 
+and predicates lose the \verb|fx| suffix.
+
+\begin{figure}[!h]
+\begin{verbatim}
+// File: ffibclient.js
+
+const { readFileSync } = require("fs");
+
+const run = async () => {
+  const buffer = readFileSync("./ffib.wasm");
+  const module = await WebAssembly.compile(buffer);
+  const instance = await WebAssembly.instantiate(module);
+  console.log("=== Floating Fibonacci ===");
+  console.log(instance.exports.fib(40.0));
+};
+
+run();
+\end{verbatim}
+  \caption{Float Fibonacci's function client}
+  \label{wasm:ffibclient}
+\end{figure}
+
+\newpage
+The floating Fibonacci client is not very different
+from the fixnum version. You must load the binaries,
+compile and instantiate the module, then call
+whatever function the module exports. The execution
+of the program through the node runtime is identical
+in the two cases.
+\begin{verbatim}
+~/src/wasCm$ scheme/wascm.x ffib.web
+~/src/wasCm$ wat2wasm ffib.wat
+~/src/wasCm$ node ffibclient.js
+=== Fibonacci(40.0) ===
+165580141
+~
+\end{verbatim}
+
 
 
 \chapter{The man who knew Javanese}
