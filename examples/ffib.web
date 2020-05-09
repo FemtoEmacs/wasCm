@@ -1,0 +1,6 @@
+(module
+
+(define (fib.x n.x)
+    (if.x (< n.x 2.0)
+        1.0
+        (+ (fib.x (- n.x 1.0)) (fib.x (- n.x 2.0))) )))
