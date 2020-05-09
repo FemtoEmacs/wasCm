@@ -137,4 +137,23 @@ enable JavaScript in local files follow the steps below:
 - Type **unique** in the search box, then press **Enter**
 - Switch the **privacy.file_unique_origin** preference to false
 
+I could not find a way of opening a local file in Google
+Chrome. However, you can start a local http server inside
+the folder where your application resides. Then you can
+open the localhost page:
+
+```Shell
+~/src/wasCm/wasm-samples$ http-server . -p8080
+Starting up http-server, serving .
+Available on:
+  http://127.0.0.1:8080
+  http://192.168.0.38:8080
+Hit CTRL-C to stop the server
+```
+Then you can open the site from another tab on your terminal:
+
+```Shell
+~/src/wasCm/wasm-samples$ google-chrome http://localhost:8080 &
+```
+
 
