@@ -125,3 +125,16 @@ in Low Level Lisp and compiled to wasm through the wasCm
 compiler.
 
 http://medicina.tips/big/nfib.html
+
+## How to load html files
+For security reasons, Firefox and other browsers do not
+let you load local files containing Javascript code. To
+enable JavaScript in local files follow the steps below:
+
+- In Firefox, open up a new tab, and type about:config
+  in the address bar, then press Enter
+- Click the **accept-the-risk** button
+- Type **unique** in the search box, then press **Enter**
+- Switch the **privacy.file_unique_origin** preference to false
+
+
