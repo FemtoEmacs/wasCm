@@ -150,10 +150,8 @@ Available on:
   http://192.168.0.38:8080
 Hit CTRL-C to stop the server
 ```
-Then you can open the site from another tab on your terminal:
-
-```Shell
-~/src/wasCm/wasm-samples$ google-chrome http://localhost:8080 &
-```
+Type http://localhost:8080 on the address field of your
+favorite browser, and you will be given a list of files
+that you can execute by mouse clicking on its entry.
 
 
