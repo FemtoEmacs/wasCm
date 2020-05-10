@@ -405,7 +405,7 @@ person refusing money. Therefore, let us
 start this tutorial talking about money.
 
 
-\index{Arithmetic!Elemetary School}  
+\index{Arithmetic!Elementary School}  
 \begin{wrapfigure}[10]{i}{5cm}
 \renewcommand\figurename{Fig.}
 \includegraphics[scale=0.5]{figs-prefix/firemen.png}
@@ -423,7 +423,7 @@ need to perform the addition
 $8 + 26 + 85 + 3$ with pencil and paper,
 you will probably stack the numbers the
 same way you did before taking pre-algebra
-classes in highschool:
+classes in high school:
 \begin{quote}
 \begin{tabular}{p{0.5cm}p{1cm}}
 + &\verb|  8|\\
@@ -468,7 +468,6 @@ functions.
 
 \section{Cambridge prefix notation}
 \index{Prefix notation}
-\index{Prefix notation!Cambridge}
 Let us summarize what we have learned
 until now. In pre-algebra, students
 learn to place arithmetic operators (+, -, × and ÷)
@@ -684,6 +683,7 @@ M-x shell
 
 
 \section{Time value of money}
+\index{Time value of money}
 Suppose that you wanted to buy a \$ 100,000 red Ferrari,
 and the forecourt salesperson in his eagerness to
 close a deal gives you the following two payment options:  
@@ -750,6 +750,7 @@ is a concept that conveys the idea that money
 available now is worth more than the same
 amount in the future.
 
+\index{Present value}
 If you have \$ 100,000.00 in a savings account
 now, that amount is called {\em present value},
 since it is what your investment would give you,
@@ -1825,7 +1826,7 @@ by Manoel Serrano's Hop web programming environment.
 Finally, there is the ongoing work on an LLL compiler.
 
 
-\chapter{WebAssembly}
+\chapter{WebAssembly}\index{WebAssembly}
 
 WebAssembly (abbreviated {\bf wasm}) is a set of instructions
 for a stack-based virtual machine. Wasm offers a portable
@@ -1973,7 +1974,7 @@ of wasm require a type declaration. You also
 learned that you need a Javascript client
 to execute a WebAssembly Program. You can run
 the client through the {\em node} runtime, as
-shown in figure \ref{wasm:node}, or through the
+shown in figure \ref{wasm:web}, or through the
 World Wide Web. Figure~\ref{wasm:web} shows
 a client that can be installed as a html page.
 You must place both the \verb|arith.wasm| file
@@ -2003,7 +2004,7 @@ Javascript and WebAssembly, which makes it possible
 to exchange vast amounts of data between WebAssembly
 and the browser.
 
-
+\index{store command}
 \begin{figure}[!h]
 \begin{verbatim}
 ;; File mem.wat
@@ -2573,6 +2574,171 @@ in the two cases.
 ~
 \end{verbatim}
 
+\section{Tail Recursion Elimination}
+\index{WebAssembly!Tail Call Elimination}
+The only way that Low Level Lisp has
+to repeat an algorithm is through
+recursive functions. A recursive function 
+breaks down the data into smaller parts,
+then solve them straightforwardly,
+if the solution is trivial, or apply
+the same function to each part, and combine
+the Results. The resume of this strategy
+is to define a function in terms of itself.
+
+\index{Recursion in LLL}
+\index{Use of memory in recursion}
+\index{WebAssembly!Recursion}
+Recursion seems almost like magic, but there
+is an important difference between recursion
+and magic. People see magic as a way of getting
+something for free, without paying the tag price
+established by the laws of nature, such as 
+conservation of energy or entropy increase.
+On the other hand, recursion is a very expensive
+computationally. To see this point, let us examine
+the definition of the Fibonacci's function:
+\begin{quote}
+\begin{verbatim}
+  (define (fib n)
+    (if (<fx n 2)
+        1
+        (+fx (fib (-fx n 1)) (fib (-fx n 2)))))
+\end{verbatim}
+\end{quote}
+For \verb|n| larger than 1, \verb|(fib n)| must
+go to the beginning of the algorithm twice,
+in order to calculate \verb|(fib (-fx n 1))|
+and \verb|(fib (-fx n 2))|, then come back
+to the expression
+\verb|(+fx (fib (-fx n 1)) (fib (-fx n 2)))|
+in order to calculate the addition.
+
+In order to reduce the cost of recursion, the
+\verb|fib| function should perform the addition
+before jumping to the beginning of the algorithm.
+To make a long story short, the repetition of the
+algorithm will not need to store a return address
+to a pending calculation, if there is no addition
+or any other calculation wrapping the recursive
+call of \verb|fib|. When \verb|fib| goes to the
+beginning of the algorithm, it should carry the
+addition already finished and all other data that it
+may need, so there will be no need of coming back.
+The process of writing a repetition, which does not
+require that the recursive function return to
+a pending calculation is called tail call elimination.
+
+\index{Unwrapped if}
+\index{WebAssembly!Unwrapped if}
+Figure~\ref{wasm:tailcall} shows how to use tail
+call elimination to calculate the Fibonacci's numbers.
+In order to make it clear that tail call elimination
+is vastly different from normal recursion, Low Level
+Lisp doesn't wrap the \verb|if-then-else| form in
+parentheses. This syntax, besides making clear the
+difference between normal normal and tail recursion,
+has the additional advantage of avoiding the accumulation
+of parentheses. However, from the next chapter onwards,
+you will learn standard Lisp, where there is no difference
+between normal recursion and tail recursion, therefore you
+must examine the recursive calls carefully, to check
+whether they are wrapped in parentheses.
+
+\begin{figure}[!h]
+\begin{verbatim}
+(module
+
+  (define (fib n f1 f2)
+    if (<fx n 2) f1
+    (fib (-fx n 1) (+fx f1 f2) f1))
+
+  (define (ffib.x n f1.x f2.x)
+    if (<fx n 2) f1.x
+    (ffib.x (-fx n 1) (+ f1.x f2.x) f1.x)))
+\end{verbatim}
+  \caption{Tail Call Elimination}
+  \label{wasm:tailcall}
+\end{figure}
+
+Figure~\ref{wasm:tailfibclient} shows the Javascript
+program that calls the \verb|fib| and \verb|ffib.x|
+functions. These two functions should serve as model
+for efficient loop implementation, where {\em loop}
+means repetition achieved through tail call elimination.
+In fact, Low Level Lisp uses loops to implement tail
+call elimination. Although WebAssembly has
+a \verb|return_call| command that was designed especially
+for tail call optimization, not all browsers implement
+it, therefore the designers of Low Level Lisp decided
+to avoid it. That said, let us see how to compile and
+run the program of listing~\ref{wasm:tailcall}.
+
+I will assume that you have the Low Level Lisp compiler,
+which is written in Bigloo scheme installed in the
+\verb|~/src/wasCm/scheme/| folder of your home directory.
+Let us assume that you have managed to install the
+Bigloo scheme compiler. Here is how to build the
+LLL compiler:
+\begin{verbatim}
+~/src/wasCm/scheme$ bigloo wascm.scm -o wascm.x
+~/src/wasCm/scheme$ cd ..
+~/src/wasCm$ _
+\end{verbatim}
+
+Now, you are ready to translate the LLL source code into
+WebAssembly Text, or {\em wat} for short.
+\begin{quote}
+  \begin{verbatim}
+~/src/wasCm$ scheme/wascm.x tailfib.web
+(module (define
+         (fib n f1 f2)
+         if
+         (<fx n 2)
+         f1
+         (fib (-fx n 1) (+fx f1 f2) f1))
+  (define (ffib.x n f1.x f2.x)
+    if
+    (<fx n 2)
+    f1.x
+    (ffib.x (-fx n 1) (+ f1.x f2.x) f1.x)))
+~/src/wasCm$ wat2wasm tailfib.wat
+~/src/wasCm$ node tailfibclient.js
+=== Tail Recursion Elimination ===
+433494437
+8
+
+\end{verbatim}
+\end{quote}
+In this chapter, you have learned that there are two
+ways of running programs compiled to WebAssembly.
+The first way is through a Javascript program embedded
+into an html page, that you can open with a browser.
+The other is to use the node runtime.
+Listing~\ref{wasm:tailfibclient} was designed for the
+node option.\index{WebAssembly!node}
+
+\begin{figure}[!h]
+\begin{verbatim}
+const { readFileSync } = require("fs");
+
+const run = async () => {
+  const buffer = readFileSync("./tailfib.wasm");
+  const module = await WebAssembly.compile(buffer);
+  const instance = await WebAssembly.instantiate(module);
+    console.log("=== Tail Recursion Elimination ===");
+    console.log(instance.exports.fib(42, 1,1));
+    console.log(instance.exports.ffib(5, 1.0, 1.0)); };
+
+run();
+\end{verbatim}
+  \caption{A client for tailfib: {\tt tailfibclient.js}}
+  \label{wasm:tailfibclient}
+\end{figure}
+
+
+
+
 
 
 \chapter{The man who knew Javanese}
@@ -2698,7 +2864,7 @@ at the time a Dutch colony.
 
 %%\index{Brahmic script}
 I also learned that Javanese is an agglutinative
-language of the Malayo-Polynesian family.\index{Polynesian languages}
+language of the Malayo-Polynesian family.
 It has a noteworthy literature written in
 characters derived from the old Hindu alphabet.
 The Javanese alphabet is a modern variant
@@ -4889,7 +5055,7 @@ an identifier that only matches itself.
 
 
 \chapter{Recursion}\label{chapter:Recursion}
-\index{Recursion}
+\index{Recursion}\index{Recursion in Scheme}
 The mathematician Peano invented a very interesting axiomatic theory for
 natural numbers. I cannot remember the details, but the idea was
 something live the following:
