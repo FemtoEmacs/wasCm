@@ -1,0 +1,11 @@
+(module
+
+  (define (fib n f1 f2)
+    if (<fx n 2) f1
+    (fib (-fx n 1) (+fx f1 f2) f1))
+
+  (define (ffib.x n f1.x f2.x)
+    if (<fx n 2) f1.x
+    (ffib.x (-fx n 1) (+ f1.x f2.x) f1.x))
+
+)
