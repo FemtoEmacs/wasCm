@@ -19,7 +19,7 @@
          [f (string-append filename ".wat")]
          [o (open-output-file f)]
          [src (read i)])
-    (write src)
+    (pp src)
     (multiple-value-bind (c env) (compile src (list))
       (pp c o)
       (newline o) (newline o)
@@ -49,7 +49,9 @@
      [(> ?l ?r) (compile-greater 'f64.gt l r env)]
      [(>= ?l ?r) (compile-greater-equal 'f64.ge l r env)]
      [(< ?l ?r) (compile-less 'f64.lt l r env)]
-     [(<= ?l ?r) (compile-less-equal 'f64.le l r env)]     
+     [(<= ?l ?r) (compile-less-equal 'f64.le l r env)]
+     [(define (?name . ?params) if . ?body)
+      (compile-tre name params (cons 'if body) '())]
      [(define (?name . ?params) . ?body)
        (compile-define name params body '())]
      [ (if ?cond ?exp1 ?exp2)
@@ -176,6 +178,44 @@
 
 (define (gr x)
   (if (flres? x) 'f64 'i32))
+
+;;      (compile-tre name params (cons 'if body) '())]
+
+(define (compile-tre name ps body env)
+     (let* [ (params (apply append
+		       (map (lambda (p)
+			      `((param ,($ p) ,(gr p) ))) ps)))]
+       (values `((func ,($ name) ,@params (result ,(gr name))
+		      (local $res ,(gr name))
+		      (block $exit
+			 (loop $tre
+			       ,@(compile-tre* name ps body env)))
+		      (get_local $res))
+		 (export ,(str name) (func ,($ name))))
+	  env)))
+
+(define (setthem xs env)
+  (map (lambda (p) `(local.set ,($ p))) xs))
+
+(define (compile-tre* name ps body env)
+  (define (tre? x) (equal? name x))
+  (match-case body
+    [ (((? tre?) . ?args))
+       `((block
+	  ,@(map (lambda(p) (compile p env)) (reverse args))
+	  ,@(setthem ps env) (br $tre)))]
+     [ (if ?pred ((? tre?) . ?args) . ?rest)		
+       `((br_if $tre ,(compile pred env)
+	    (block
+	     ,@(map (lambda(p) (compile p env))
+		    (reverse args))
+	     ,@(setthem ps env) (br $tre)))
+	 ,@(compile-tre* name ps rest env))]
+     [ (if ?pred ?retexpr . ?resto) 
+       `((br_if $exit ,(compile pred env)
+		(local.set $res ,(compile retexpr env)))
+	 ,@(compile-tre* name ps resto env))]
+     [?other (print other)  '(())  ]))
 
 (define (compile-define name ps body env)
   (multiple-value-bind (body env) (compile* body env)
