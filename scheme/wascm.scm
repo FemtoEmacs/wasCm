@@ -1,8 +1,11 @@
 (module web (main start))
 
+
+(define defs '())
+
 (define (start args)
   (cond [ (null? (cdr args))
-	  (display "Usage: ./newcomp file-without-extension")
+	  (display "Usage: ./wascm.x file-without-extension")
 	  (newline)]
 	[ (file-exists? (format "~a.web" (cadr args)))
 	  (compile-file (cadr args))
@@ -14,12 +17,42 @@
 	[else (display "Type the file name without extension")
 	      (newline)]))
 
+(define (function-heads xs)
+  (let loop [(s xs) (acc '())]
+    (cond [(null? s) acc]
+	  [ (and (pair? s)
+		(pair? (car s))
+		(equal? (car (car s)) ;; first element of s
+			'define)      ;; is a definition
+		(pair? (cdr (car s))) ;; thing defined exists
+		(pair? (cadr (car s))) ;; and is a list
+                (symbol? (car (cadr (car s))) ) ;; defined function
+	     );; definition is well formed
+	   (let* [(def (car s))
+		  (hd (cadr def))
+		  (args (cdr hd))
+		  (nargs (length args))
+		  (arity (cons (car hd) nargs))
+		  (body (cddr def))]
+	     (when (not (pair? body))
+	       (error "Empty definition not allowed"
+		      "Culprit" def))
+	     (print (format "define - ~a" arity))
+	     (loop (cdr s) (cons arity acc)))]
+	  [(pair? s)
+	   (print (format "declaration - ~a" (car s)))
+	   (loop (cdr s) acc)]
+	  [else (error "Wrong file format" "Culprit" s)])))
+
+		       
+			     
 (define (compile-file filename)
   (let* ([i (open-input-file (string-append filename ".web"))]
          [f (string-append filename ".wat")]
          [o (open-output-file f)]
          [src (read i)])
-    (pp src)
+    (set! defs (function-heads src))
+    (pp defs)
     (multiple-value-bind (c env) (compile src (list))
       (pp c o)
       (newline o) (newline o)
@@ -73,7 +106,11 @@
      [(data ?mempos ?maxsize . ?body)
       (compile-data mempos maxsize body)]
      [(module . ?body ) (compile-module body env)]
-     [(?name . ?params) (compile-call name params env)] ))
+     [(?name . ?params)
+      (when (not (member (cons name (length params)) defs))
+	(error "function call not defined "
+	       "culprit" (cons name params)))
+      (compile-call name params env)] ))
 
 
 (define (gconst x)
