@@ -1846,7 +1846,7 @@ Science, ask for help from students of the local college.
 I will not provide instructions about the installation
 of the \verb|wat2wasm| compiler, because they change
 with time and from computer to computer. You will also
-need the installation of the node interpreter of
+need the installation of the node interpreter for
 Javascript.
 
 
@@ -1974,7 +1974,7 @@ of wasm require a type declaration. You also
 learned that you need a Javascript client
 to execute a WebAssembly Program. You can run
 the client through the {\em node} runtime, as
-shown in figure \ref{wasm:web}, or through the
+shown in figure \ref{wasm:client}, or through the
 World Wide Web. Figure~\ref{wasm:web} shows
 a client that can be installed as a html page.
 You must place both the \verb|arith.wasm| file
@@ -1985,7 +1985,7 @@ I don't know much about Javascript, except that
 it is one of the four languages to run natively
 in browsers, the other two being HTML, CSS and
 WebAssembly, of course. However, from
-listing~\ref{wasm:node}, I can see that
+listing~\ref{wasm:client}, I can see that
 a Javascript program needs a \verb|run()|
 function, which receives the wasm program.
 The Javascript compiles that buffer into a module,
@@ -2233,12 +2233,12 @@ The last thing that we need to implement in
 WebAssembly are singly linked lists, the
 kind of lists that exists in Lisp. In order
 to implement lists, one needs only three
-operations -- cons, car and cdr, which are
-implemented in listing~\ref{wasm:cons}
+operations -- \verb|cons|, \verb|car| and \verb|cdr|,
+which are implemented in listing~\ref{wasm:cons}
 and~\ref{wasm:selectors}.
 
 \begin{figure}[!h]
-  \begin{verbatim}
+\begin{verbatim}
 <!DOCTYPE html>
 <html lang="en">
 <head> <meta charset="UTF-8">
@@ -2263,12 +2263,12 @@ function run(wasm) {
  document.getElementById("htag").innerHTML= zmsg;
  document.getElementById("tag").innerHTML= zs;}
 fetch("consdemo.wasm").then(reponse => reponse.arrayBuffer()
-).then(bytes => WebAssembly.instantiate(bytes, {})
-).then(result => result.instance
-).then(run);
+    ).then(bytes => WebAssembly.instantiate(bytes, {})
+    ).then(result => result.instance
+    ).then(run);
 </script>
 </body> </html>
-  \end{verbatim}
+\end{verbatim}
 
 \caption{List selectors: Javascript side}
   \label{wasm:selectors}
@@ -2291,7 +2291,8 @@ fetch("consdemo.wasm").then(reponse => reponse.arrayBuffer()
  (func $cons (param $hd i32) (param $tail i32) (result i32)
   (local $n i32) (local.set $n (call $newcons))
   (i32.store (local.get $n) (local.get $hd))
-  (i32.store (i32.add (local.get $n) (i32.const 4)) (local.get $tail))
+  (i32.store (i32.add (local.get $n) (i32.const 4))
+             (local.get $tail))
   (local.get $n))
 
   (func $car (param $xs i32) (result i32)
@@ -2320,8 +2321,8 @@ fetch("consdemo.wasm").then(reponse => reponse.arrayBuffer()
 
 \section{Why do I need Low Level Lisp?}
 As you could see, dealing with strings requires
-a lot of redtape. Low Level Lisp can read
-you of this manual handling of memory.
+a lot of redtape. Low Level Lisp can spare
+you from this manual handling of memory.
 
 \begin{figure}[!h]
 \begin{verbatim}
@@ -2349,7 +2350,7 @@ Program of listing~\ref{wasm:scmstr.web} requires
 only what is strictly necessary to store and
 retrieve strings, to wit, the position where the
 string memory starts and the maximum size that
-a string can have, witch is 100 bytes, in the example.
+a string can have, which is 100 bytes, in the example.
 
 The compiler for Low Level Lisp is written in Bigloo
 scheme. You will find the compiler in the same repository,
@@ -2415,28 +2416,28 @@ a language that we will call LLL from now on.
 ;; File: fib.web
 (module
 
- (define (fib n)
-     (if (<fx n 2)
-        1
-        (+fx (fib (-fx n 1)) (fib (-fx n 2)))))
-)
+  (define (fib.n i)
+    (if (< i 2) 1
+        (+ (fib.n (- i 1))
+	     (fib.n (- i 2))) )))
 \end{verbatim}
   \caption{Fibonacci of fixnum integer}
   \label{wasm:fixnum-fibonacci}
 \end{figure}
 
 Below there is a client for the program of
-listing~\ref{wasm:fixnum-Fibonacci}.
+listing~\ref{wasm:fixnum-fibonacci}.
 
 \begin{figure}[!h]
 \begin{verbatim}
 const { readFileSync } = require("fs");
+
 const run = async () => {
   const buffer = readFileSync("./fib.wasm");
   const module = await WebAssembly.compile(buffer);
   const instance = await WebAssembly.instantiate(module);
-  console.log("=== Fibonacci(40) ===");
-  console.log(instance.exports.fib(40));};
+  console.log("Fibonacci(40)=", instance.exports.fib(40));
+};
 
 run();
 \end{verbatim}
@@ -2444,49 +2445,46 @@ run();
   \label{wasm:fibclient}
 \end{figure}
 
-Computers operate on many numerical types, such
-as fixnums, which are integers smaller than a certain
-value, and float numbers, which are approximations
-of real numbers. For each type there is
-a different set of arithmetic operators and
-comparison predicates. The functions \verb|+fx|,
-\verb|-fx|, \verb|*fx|, \verb|/fx| and
-\verb|rem| operate on fixnum, which means 32 bit
-integers. The same way, the predicates \verb|=fx|,
-\verb|/=fx|, \verb|>fx|, \verb|>=fx|, \verb|<fx|
-and \verb|<=fx| compare fixnum integers.
-
+\paragraph{Computers} operate on many numerical types,
+such as i32 bit integers and float numbers, which are
+approximations of real numbers. For each type, there is
+a different set of instructions. Low Level Lisp can infer
+which instruction it should use, but the programmer must
+inform the type of variables and the return type
+of used defined functions, which can be done through
+the \verb|.n| suffix, in the case of 32 bit integers.
+Besides this, the identifiers \verb|i|, \verb|j|,
+\verb|k| and \verb|n| are reserved to i32 integers.
 
 Below, you will see how to compile and run the
 program of listing~\ref{wasm:fixnum-fibonacci}.
 The first step of the compilation process is to
 translate from Low Level Lisp to WebAssembly Text,
-or wat. This is done by a Bigloo program that
+or {\bf wat}. This is done by a Bigloo program that
 you compiled previously, and placed the executable
-in the directory \verb|scheme|. This will generate
-the \verb|fib.wat| that needs to be compiled to
+in the directory \verb|scheme|. The \verb|fib.wat|
+file that LLL generates needs to be translated into
 binary code by the \verb|wat2wasm| compiler.
 \begin{verbatim}
-~/src/wasCm$ cat fib.web
+~/src/wasCm/examples$ cat fib.web
+;; File: fib.web
 (module
 
-  (define (fib n)
-    (if (<fx n 2)
-        1
-        (+fx (fib (-fx n 1)) (fib (-fx n 2)))))
-)
-~/src/wasCm$ scheme/wascm.x fib.web
-~/src/wasCm$ wat2wasm fib.wat
-~/src/wasCm$ node fibclient.js
-=== Fibonacci(40) ===
-165580141
+  (define (fib.n i)
+    (if (< i 2) 1
+        (+ (fib.n (- i 1))
+           (fib.n (- i 2))) )))
+~/src/wasCm/examples$ ../scheme/wascm.x fib.web
+~/src/wasCm/examples$ wat2wasm fib.wat
+~/src/wasCm/examples$ node fibclient.js
+Fibonacci(40)= 165580141
 \end{verbatim}
 
 The command \verb|wat2wasm fib.wat| translate the
-WebAssembly Text, or wat for short, into binary
-code that can be executed by the WebAssembly virtual
-machine. The binary file \verb|fib.wasm| receives
-the \verb|wasm| extension. There are two main ways
+WebAssembly Text, or {\bf wat} for short, into binary
+code that is placed into the \verb|fib.wasm| file, and
+can be executed by the WebAssembly virtual
+machine. There are two main ways
 to execute a \verb|wasm| file. One of them is to
 publish it on a web page, so people can enjoy the
 application on their browsers.
@@ -2506,51 +2504,42 @@ and call any function that it exports.
 \end{verbatim}
 
 \section{Floating point}
-Besides fixnum, another important numerical type in
-computer science is floating point numbers.
+Besides i32 integers, another important numerical type
+is floating point numbers. LLL considers that
+any identifier represents f64 floating point numbers,
+unless it is reserved for integers. The names
+reserved for integers are the \verb|i|, \verb|j|,
+\verb|k|, \verb|n| variables and the identifiers,
+which have the \verb|n| suffix.
 
 \begin{figure}[!h]
 \begin{verbatim}
-;; File: fib.web
+;; File: ffib.web
 (module
-
-(define (fib.x n.x)
-    (if.x (< n.x 2.0)
-        1.0
-        (+ (fib.x (- n.x 1.0)) (fib.x (- n.x 2.0))) )))
+(define (fib x)
+    (if (< x 2.0) 1.0
+        (+ (fib (- x 1.0)) (fib (- x 2.0))) )))
 \end{verbatim}
   \caption{Fibonacci of a floating point number}
   \label{wasm:float-fibonacci}
 \end{figure}
 
-Listing~\ref{wasm:float-fibonacci} shows that variables
-that will receive a floating point number must bear
-the \verb|.x| suffix. The function identifier, which is
-\verb|fib.x| in the example, must show the \verb|.x|
-suffix to specify that it returns a floating point result.
-The decimal point is mandatory for floating point
-constants. The \verb|if| form
-changes to \verb|if.x| to show that it returns a
-floating point result. Finally, floating point operations
-have an entirely new set of functions: \verb|+| for
-addition, \verb|-| for subtraction,
-\verb|/| for division and \verb|*| for multiplication. 
-Basically, floating point arithmetic operations 
-and predicates lose the \verb|fx| suffix.
+Listing~\ref{wasm:float-fibonacci} shows that the
+decimal point is mandatory for floating point
+constants, since it is one of the hints that the
+type inference system uses to select the correct
+arithmetic and logic instructions.
 
 \begin{figure}[!h]
 \begin{verbatim}
 // File: ffibclient.js
-
 const { readFileSync } = require("fs");
 
 const run = async () => {
   const buffer = readFileSync("./ffib.wasm");
   const module = await WebAssembly.compile(buffer);
   const instance = await WebAssembly.instantiate(module);
-  console.log("=== Floating Fibonacci ===");
-  console.log(instance.exports.fib(40.0));
-};
+  console.log("Fib(40)=", instance.exports.fib(40.0));};
 
 run();
 \end{verbatim}
@@ -2558,7 +2547,7 @@ run();
   \label{wasm:ffibclient}
 \end{figure}
 
-\newpage
+
 The floating Fibonacci client is not very different
 from the fixnum version. You must load the binaries,
 compile and instantiate the module, then call
@@ -2566,12 +2555,10 @@ whatever function the module exports. The execution
 of the program through the node runtime is identical
 in the two cases.
 \begin{verbatim}
-~/src/wasCm$ scheme/wascm.x ffib.web
-~/src/wasCm$ wat2wasm ffib.wat
-~/src/wasCm$ node ffibclient.js
-=== Fibonacci(40.0) ===
-165580141
-~
+~/src/wasCm/examples$ ../scheme/wascm.x ffib.web
+~/src/wasCm/examples$ wat2wasm ffib.wat
+~/src/wasCm/examples$ node ffibclient.js
+Fib(40)= 165580141
 \end{verbatim}
 
 \section{Tail Recursion Elimination}
@@ -2595,36 +2582,55 @@ and magic. People see magic as a way of getting
 something for free, without paying the tag price
 established by the laws of nature, such as 
 conservation of energy or entropy increase.
-On the other hand, recursion is a very expensive
+On the other hand, recursion is very expensive
 computationally. To see this point, let us examine
 the definition of the Fibonacci's function:
 \begin{quote}
 \begin{verbatim}
-  (define (fib n)
-    (if (<fx n 2)
-        1
-        (+fx (fib (-fx n 1)) (fib (-fx n 2)))))
+  (define (fib.n i)
+    (if (< i 2) 1
+        (+ (fib.n (- i 1))
+           (fib.n (- i 2))) )))
 \end{verbatim}
 \end{quote}
-For \verb|n| larger than 1, \verb|(fib n)| must
+For \verb|i| larger than 1, \verb|(fib.n i)| must
 go to the beginning of the algorithm twice,
-in order to calculate \verb|(fib (-fx n 1))|
-and \verb|(fib (-fx n 2))|, then come back
+in order to calculate \verb|(fib.n (- i 1))|
+and \verb|(fib.n (- i 2))|, then come back
 to the expression
-\verb|(+fx (fib (-fx n 1)) (fib (-fx n 2)))|
-in order to calculate the addition.
+\verb|(+ (fib.n (- i 1)) (fib.n (- i 2)))|
+to calculate the addition.
 
 In order to reduce the cost of recursion, the
-\verb|fib| function should perform the addition
+\verb|fib.n| function should perform the addition
 before jumping to the beginning of the algorithm.
-To make a long story short, the repetition of the
-algorithm will not need to store a return address
-to a pending calculation, if there is no addition
+Thus, the repetition of the
+algorithm would not need to store a return address
+to a pending calculation, as there would be no addition
 or any other calculation wrapping the recursive
-call of \verb|fib|. When \verb|fib| goes to the
+call of \verb|fib.n|. 
+
+\begin{figure}[!h]
+\begin{verbatim}
+(module
+  (define (fib.n i f1.n f2.n)
+    if (< i 2) f1.n
+    (fib.n (- i 1) (+ f1.n f2.n) f1.n))
+
+  (define (ffib i f1 f2)
+    if (< i 2) f1
+    (ffib (- i 1) (+ f1 f2) f1)))
+\end{verbatim}
+  \caption{Tail Call Elimination}
+  \label{wasm:tailcall}
+\end{figure}
+
+
+When \verb|fib.n| goes to the
 beginning of the algorithm, it should carry the
-addition already finished and all other data that it
-may need, so there will be no need of coming back.
+addition already finished in one of its arguments,
+and all other arguments as well,
+so there will be no need of coming back.
 The process of writing a repetition, which does not
 require that the recursive function return to
 a pending calculation is called tail call elimination.
@@ -2637,87 +2643,13 @@ In order to make it clear that tail call elimination
 is vastly different from normal recursion, Low Level
 Lisp doesn't wrap the \verb|if-then-else| form in
 parentheses. This syntax, besides making clear the
-difference between normal normal and tail recursion,
+difference between normal and tail recursion,
 has the additional advantage of avoiding the accumulation
 of parentheses. However, from the next chapter onwards,
 you will learn standard Lisp, where there is no difference
 between normal recursion and tail recursion, therefore you
 must examine the recursive calls carefully, to check
 whether they are wrapped in parentheses.
-
-\begin{figure}[!h]
-\begin{verbatim}
-(module
-
-  (define (fib n f1 f2)
-    if (<fx n 2) f1
-    (fib (-fx n 1) (+fx f1 f2) f1))
-
-  (define (ffib.x n f1.x f2.x)
-    if (<fx n 2) f1.x
-    (ffib.x (-fx n 1) (+ f1.x f2.x) f1.x)))
-\end{verbatim}
-  \caption{Tail Call Elimination}
-  \label{wasm:tailcall}
-\end{figure}
-
-Figure~\ref{wasm:tailfibclient} shows the Javascript
-program that calls the \verb|fib| and \verb|ffib.x|
-functions. These two functions should serve as model
-for efficient loop implementation, where {\em loop}
-means repetition achieved through tail call elimination.
-In fact, Low Level Lisp uses loops to implement tail
-call elimination. Although WebAssembly has
-a \verb|return_call| command that was designed especially
-for tail call optimization, not all browsers implement
-it, therefore the designers of Low Level Lisp decided
-to avoid it. That said, let us see how to compile and
-run the program of listing~\ref{wasm:tailcall}.
-
-I will assume that you have the Low Level Lisp compiler,
-which is written in Bigloo scheme installed in the
-\verb|~/src/wasCm/scheme/| folder of your home directory.
-Let us assume that you have managed to install the
-Bigloo scheme compiler. Here is how to build the
-LLL compiler:
-\begin{verbatim}
-~/src/wasCm/scheme$ bigloo wascm.scm -o wascm.x
-~/src/wasCm/scheme$ cd ..
-~/src/wasCm$ _
-\end{verbatim}
-
-Now, you are ready to translate the LLL source code into
-WebAssembly Text, or {\em wat} for short.
-\begin{quote}
-  \begin{verbatim}
-~/src/wasCm$ scheme/wascm.x tailfib.web
-(module (define
-         (fib n f1 f2)
-         if
-         (<fx n 2)
-         f1
-         (fib (-fx n 1) (+fx f1 f2) f1))
-  (define (ffib.x n f1.x f2.x)
-    if
-    (<fx n 2)
-    f1.x
-    (ffib.x (-fx n 1) (+ f1.x f2.x) f1.x)))
-~/src/wasCm$ wat2wasm tailfib.wat
-~/src/wasCm$ node tailfibclient.js
-=== Tail Recursion Elimination ===
-433494437
-8
-
-\end{verbatim}
-\end{quote}
-In this chapter, you have learned that there are two
-ways of running programs compiled to WebAssembly.
-The first way is through a Javascript program embedded
-into an html page, that you can open with a browser.
-The other is to use the node runtime.
-Listing~\ref{wasm:tailfibclient} was designed for the
-node option.\index{WebAssembly!node}
-
 \begin{figure}[!h]
 \begin{verbatim}
 const { readFileSync } = require("fs");
@@ -2736,6 +2668,66 @@ run();
   \label{wasm:tailfibclient}
 \end{figure}
 
+Figure~\ref{wasm:tailfibclient} shows the Javascript
+program that calls the \verb|fib.n| and \verb|ffib|
+functions. These two functions should serve as model
+for efficient loop implementation, where {\em loop}
+means repetition achieved through tail call elimination.
+In fact, Low Level Lisp uses loops to implement tail
+call elimination.
+
+I will assume that you have the Low Level Lisp compiler,
+which is written in Bigloo scheme installed in the
+\verb|~/src/wasCm/scheme/| folder of your home directory.
+Let us assume that you have managed to install the
+Bigloo scheme compiler. Here is how to build the
+LLL compiler:
+\begin{verbatim}
+~/src/wasCm/scheme$ bigloo wascm.scm -o wascm.x
+~/src/wasCm/scheme$ cd ..
+~/src/wasCm$ _
+\end{verbatim}
+
+\paragraph{Compilation and deployment.}
+Now, you are ready to translate the LLL source code into
+WebAssembly Text, or {\em wat} for short. The wascm.x
+LLL compiler is in the \verb|~/src/wasCm/scheme/|, where
+we have built it through the Bigloo compiler. However,
+the source code is in the \verb|~/src/wasCm/examples/|
+folder. Therefore, you need to provide the complete path
+from one folder to the other, in order to call the
+compiler.
+\begin{quote}
+\begin{verbatim}
+~/src/wasCm/examples$ ../scheme/wascm.x tailfib.web
+declaration - module
+define - (fib.n . 3)
+define - (ffib . 3)
+((ffib . 3) (fib.n . 3))
+
+~/src/wasCm/examples$ wat2wasm tailfib.wat
+~/src/wasCm/examples$ node tailfibclient.js
+=== Tail Recursion Elimination ===
+433494437
+8
+~/src/wasCm/examples$
+\end{verbatim}
+\end{quote}
+
+
+ Although WebAssembly has
+a \verb|return_call| command that was designed especially
+for tail call optimization, not all browsers implement
+it, therefore the designers of Low Level Lisp decided
+to avoid it.
+
+In this chapter, you have learned that there are two
+ways of running programs compiled to WebAssembly.
+The first way is through a Javascript program embedded
+into an html page, that you can open with a browser.
+The other is to use the node runtime.
+Listing~\ref{wasm:tailfibclient} was designed for the
+node option.\index{WebAssembly!node}
 
 
 
