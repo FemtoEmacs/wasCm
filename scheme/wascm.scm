@@ -1,5 +1,80 @@
 (module web (main start))
 
+;; Begin of type inference
+(define (arithop? x)
+  (member x '(+ * / -))  )
+
+(define (nres? x)
+  (let [(sfx (suffix (symbol->string x)))]
+    (or (string=? sfx "n")
+	(string=? sfx "i")
+	(member x '(i j k n))) ))
+
+(define (gr x)
+  (if (nres? x) 'i32 'f64))
+
+(define (infercall xs)
+  (cond [(ispred? xs) 'bool]
+	[(arithop? xs)   #f]
+        [(equal? (gr xs) 'i32) 'i32]
+	[(equal? (gr xs) 'f64) 'f64]
+	[(isfx? xs ) 'i32]
+	[(not (ispred? xs)) #f]))
+
+(define (numbi32? x)
+  (or (and (integer? x) (exact? x))
+      (and (symbol? x) (not (isfx? x))
+	   (not (ispred? x))
+           (not (isFloatOp? x))
+	   (equal? (gr x) 'i32))
+      (and (pair? x) (symbol? (car x))
+	   (equal? (infercall (car x)) 'i32)) ))
+
+(define (numbf64? x)
+  (or (and (number? x) (not (exact? x)))
+      (and (symbol? x) (not (isfx? x))
+	   (not (ispred? x))
+           (not (isFloatOp? x))
+	   (equal? (gr x) 'f64))
+      (and (pair? x) (symbol? (car x))
+	   (equal? (infercall (car x)) 'f64)) ))
+
+(define (type-inference expr)
+  (match-case expr
+    [(? numbi32?) 'i32]
+    [(? numbf64?) 'f64]
+    [ ((? arithop?) ?x ?y)
+      (let [(t1 (type-inference x))
+	    (t2 (type-inference y))]
+	(if (not (equal? t1 t2))
+	    (error "Type conflict" "Culprit" expr)
+	    t1))]
+    [ ((? arithop?) ?x ?y . ?rest)
+      (type-inference (binarize expr))]
+    [?- (error "Cannot infer type" "Culprit" expr)]))
+
+
+(define (boolean-operator op x y)
+  (let [ (xt (type-inference x))
+	  (yt (type-inference y))]
+    (when (not (equal? xt yt))
+      (error "In Boolean operator,"
+	     "args must have the same type" (list op x y)))
+    (cond
+       [ (and (equal? op '=) (equal? xt 'i32)) 'i32.eq]
+       [ (and (equal? op '/=) (equal? xt 'i32)) 'i32.ne]
+       [ (and (equal? op '>) (equal? xt 'i32)) 'i32.gt_s]
+       [ (and (equal? op '>=) (equal? xt 'i32)) 'i32.ge_s]
+       [ (and (equal? op '<) (equal? xt 'i32)) 'i32.lt_s]
+       [ (and (equal? op '<=) (equal? xt 'i32)) 'i32.le_s]
+       [ (and (equal? op '=) (equal? xt 'f64)) 'f64.eq]
+       [ (and (equal? op '/=) (equal? xt 'f64)) 'f64.ne]
+       [ (and (equal? op '>) (equal? xt 'f64)) 'f64.gt]
+       [ (and (equal? op '>=) (equal? xt 'f64)) 'f64.ge]
+       [ (and (equal? op '<) (equal? xt 'f64)) 'f64.lt]
+       [ (and (equal? op '<=) (equal? xt 'f64)) 'f64.le])))
+       
+;;; End of type inference
 
 (define defs '())
 
@@ -58,46 +133,101 @@
       (newline o) (newline o)
       (close-output-port o))))
 
+(define (binarize xs)
+  (match-case xs
+    [ (-fx ?x) `(-fx 0 ,x)]
+    [ (+fx ?x) x]
+    [ (*fx ?x) x]
+    [ (- ?x) `(- 0.0 ,x)]
+    [ (+ ?x) x]
+    [ (* ?x) x]    
+    [ (?op ?x ?y) `(,op ,x ,y)]
+    [ (?op ?x ?y . ?rest) `(,op ,x ,(binarize `(,op ,y ,@rest)))]
+    [else (error "Malformed expression" "Culprit" xs)]))
+
+(define (typexpr b)
+  (cond [(numi32? b) 'i32]
+	[(numf64? b) 'f64]
+	[else (error "let can be used only with i32 and f64 numbers"
+		  "Culprit"  b)]))
+
 (define (compile d env)
   (match-case d
      [(? number?) (compile-number d env)]
-     [(? symbol?) (compile-symbol d env)]
-     [(+fx ?l ?r) (compile-add 'i32.add l r env)]
-     [(-fx ?l ?r) (compile-minus 'i32.sub l r env)]
-     [(*fx ?l ?r) (compile-multiply 'i32.mul l r env)]
-     [(/fx ?l ?r) (compile-divide 'i32.div_s l r env)]
-     [(rem ?l ?r) (compile-rem 'i32.rem_s l r env)] 
-     [(+ ?l ?r) (compile-add 'f64.add l r env)]
-     [(- ?l ?r) (compile-minus 'f64.sub l r env)]
-     [(* ?l ?r) (compile-multiply 'f64.mul l r env)]
-     [(/ ?l ?r) (compile-divide 'f64.div l r env)]
-     [(=fx ?l ?r) (compile-equal 'i32.eq l r env)]
-     [(/=fx ?l ?r) (compile-unequal 'i32.ne l r env)]
-     [(>fx ?l ?r) (compile-greater 'i32.gt_s l r env)]
-     [(>=fx ?l ?r) (compile-greater-equal 'i32.ge_s l r env)]
-     [(<fx ?l ?r) (compile-less 'i32.lt_s l r env)]
-     [(<=fx ?l ?r) (compile-less-equal 'i32.le_s l r env)]
-     [(= ?l ?r) (compile-equal 'f64.eq l r env)]
-     [(/= ?l ?r) (compile-unequal 'f64.ne l r env)]
-     [(> ?l ?r) (compile-greater 'f64.gt l r env)]
-     [(>= ?l ?r) (compile-greater-equal 'f64.ge l r env)]
-     [(< ?l ?r) (compile-less 'f64.lt l r env)]
-     [(<= ?l ?r) (compile-less-equal 'f64.le l r env)]
+     [(? symbol?) (compile-symbol d env)] ;;(checknumi32 op x y)
+     [(+.n ?l ?r) (checknumi32 '+.n l r)
+                  (compile-add 'i32 l r env)]
+     [(-.n ?l ?r) (checknumi32 '-.n l r)
+                  (compile-minus 'i32 l r env)]
+     [(*.n ?l ?r) (checknumi32 '*.n l r)
+                  (compile-multiply 'i32 l r env)]
+     [(/.n ?l ?r) (checknumi32 '/.n l r)
+                  (compile-divide 'i32 l r env)]
+
+     [(+.n ?l . ?rest) (compile (binarize d) env)]
+     [(-.n ?l . ?rest) (compile (binarize d)  env)]
+     [(*.n ?l . ?rest) (compile (binarize d)  env)]
+     [(/.n ?l ?r . ?rest) (compile (binarize d) env)]
+     [(rem.n ?l ?r) (checknumi32 'rem.n l r)
+         (compile-rem 'i32.rem_s l r env)]
+     
+     [(+ ?l ?r) 
+         (compile-add (type-inference d) l r env)]
+     [(- ?l ?r) 
+                 (compile-minus (type-inference d) l r env)]
+     [(* ?l ?r) 
+                (compile-multiply (type-inference d) l r env)]
+     [(/ ?l ?r) 
+                (compile-divide (type-inference d) l r env)]
+
+     [(f/i ?x) (checknumi32 'f/i x x)
+           (compile-convert_s x env)]
+     
+     [(+ ?l . ?rest) (compile (binarize d) env)]
+     [(- ?l . ?rest) (compile (binarize d)  env)]
+     [(* ?l . ?rest) (compile (binarize d)  env)]
+     [(/ ?l ?r . ?rest) (compile (binarize d) env)]
+
+     [(=.n ?l ?r) (checknumi32 '=.n l r)
+                  (compile-equal 'i32.eq l r env)]
+     [(/=.n ?l ?r) (checknumi32 '/=.n l r)
+                   (compile-unequal 'i32.ne l r env)]
+     [(>.n ?l ?r) (checknumi32 '>.n l r)
+                  (compile-greater 'i32.gt_s l r env)]
+     [(>=.n ?l ?r) (checknumi32 '>=.n l r)
+            (compile-greater-equal 'i32.ge_s l r env)]
+     [(<.n ?l ?r) (checknumi32 '<.n l r)
+                  (compile-less 'i32.lt_s l r env)]
+     [(<=.n ?l ?r) (checknumi32 '<=.n l r)
+          (compile-less-equal 'i32.le_s l r env)]
+     [ (= ?l ?r) 
+       (compile-equal (boolean-operator '=  l  r) l r env)]
+     [(/= ?l ?r) 
+        (compile-unequal (boolean-operator '/=  l  r) l r env)]
+     [ (> ?l ?r) 
+         (compile-greater (boolean-operator '>  l  r) l r env)]
+     [(>= ?l ?r) 
+         (compile-greater-equal (boolean-operator '>=  l  r) l r env)]
+     [(< ?l ?r) 
+         (compile-less (boolean-operator '<  l  r) l r env)]
+     [(<= ?l ?r) 
+         (compile-less-equal (boolean-operator '<=  l  r) l r env)]
      [(define (?name . ?params) if . ?body)
       (compile-tre name params (cons 'if body) '())]
      [(define (?name . ?params) . ?body)
        (compile-define name params body '())]
      [ (if ?cond ?exp1 ?exp2)
-       (compile-if-then-else '(result i32)
-		     cond exp1 exp2 env)]
-     [ (if.x ?cond ?exp1 ?exp2)
-       (compile-if-then-else '(result f64)
-		      cond exp1 exp2 env)]
+       (if  (and (type-inference exp1) (type-inference exp2))
+	 (compile-if-then-else
+	     `(result ,(type-inference exp1))
+	     cond exp1 exp2 env)
+	 (error "Conflict in if results" "Culprit"
+		(list 'cond exp1 exp2)))]
      [(local [?name ?exp] . ?body)
       (compile-local name exp body env)]
-     [(let ?vars . ?body)
-      (compile-let vars body env)]
-     [(ref32 ?index)
+     [(let* ?vars . ?body)
+      (compile-let  vars body env)]
+     [(ref.n ?index)
       (compile-ref32 index env)]
      [(set! ?ind ?v)
       (compile-set ind v env)]
@@ -143,25 +273,33 @@
 
 (define (str x) (prefix (symbol->string x)))
 
-(define (compile-add sum l r env)
+(define (compile-add typ l r env)
     (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-         (values `(,sum ,l ,r) env)) ))
+	 (values `(,(if (equal? typ 'i32)
+			'i32.add 'f64.add) ,l ,r) env)) ))
 
-(define (compile-minus sub l r env)
+(define (compile-minus typ l r env)
     (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-    (values `(,sub ,l ,r) env)) ))
+	 (values `(,(if (equal? typ 'i32)
+			'i32.sub 'f64.sub) ,l ,r) env)) ))
 
-(define (compile-multiply mul l r env)
+(define (compile-multiply typ l r env)
     (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-    (values `(,mul ,l ,r) env)) ))
+    (values `(,(if (equal? typ 'i32)
+			'i32.mul 'f64.mul) ,l ,r) env)) ))
 
-(define (compile-divide div l r env)
+(define (compile-convert_s x env)
+  (multiple-value-bind (x env) (compile x env)
+		       (values  `(f64.convert_s/i32  ,x) env)))
+
+(define (compile-divide typ l r env)
      (multiple-value-bind (l env) (compile l env)
       (multiple-value-bind (r env) (compile r env)
-  (values `(,div ,l ,r) env)) ))
+  (values `(,(if (equal? typ 'i32)
+			'i32.div_s 'f64.div) ,l ,r) env)) ))
 
 (define (compile-rem rem l r env)
      (multiple-value-bind (l env) (compile l env)
@@ -208,13 +346,47 @@
 	    (nxt (cdr s) e
 	       (cons exp result))) )))
 
-(define (flres? x)
-  (let [(sfx (suffix (symbol->string x)))]
-    (or (string=? sfx "x")
-	(string=? sfx "y"))))
+(define (ispred? x)
+  (member x  '( =.n /=.n >.n >=.n <.n <=.n = /= 
+	 >  >=  <  <= )))
 
-(define (gr x)
-  (if (flres? x) 'f64 'i32))
+(define (isfx? x)
+  (member x '(+.n -.n /.n *.n rem.n)))
+
+(define (isFloatOp? x)
+  (member x '(+ - / *)))
+
+(define (calltype xs)
+  (cond [(ispred? xs) 'bool]
+	[(isFloatOp? xs) 'f64]
+        [(equal? (gr xs) 'i32) 'i32]
+	[(equal? (gr xs) 'f64) 'f64]
+	[(isfx? xs ) 'i32]
+	[(not (ispred? xs)) 'f64]))
+	     
+
+(define (numi32? x)
+  (or (and (integer? x) (exact? x))
+      (and (symbol? x) (not (isfx? x))
+	   (not (ispred? x))
+           (not (isFloatOp? x))
+	   (equal? (gr x) 'i32))
+      (and (pair? x) (symbol? (car x))
+	   (equal? (calltype (car x)) 'i32)) ))
+
+(define (checknumi32 op x y)
+  (when (not (and (numi32? x) (numi32? y)))
+    (error "Args should be i32"
+	   "Culprit"  (list op x y)) ))
+
+(define (numf64? x)
+  (or (and (number? x) (not (exact? x)))
+      (and (symbol? x) (not (isfx? x))
+	   (not (ispred? x))
+           (not (isFloatOp? x))
+	   (equal? (gr x) 'f64))
+      (and (pair? x) (symbol? (car x))
+	   (equal? (calltype (car x)) 'f64)) ))
 
 ;;      (compile-tre name params (cons 'if body) '())]
 
@@ -252,7 +424,8 @@
        `((br_if $exit ,(compile pred env)
 		(local.set $res ,(compile retexpr env)))
 	 ,@(compile-tre* name ps resto env))]
-     [?other (print other)  '(())  ]))
+     [?other (error "Tail Call Elimination failed"
+		    "Culprit"  other)]))
 
 (define (compile-define name ps body env)
   (multiple-value-bind (body env) (compile* body env)
@@ -261,7 +434,7 @@
 			      `((param ,($ p) ,(gr p) ))) ps)))
             (locals (apply append
 		       (map (lambda (name)
-			      `((local ,($ name) i32))) env)) ))
+			      `((local ,($ name) ,(gr name)))) env)) ))
       (values `((func ,($ name) ,@params (result ,(gr name))
 		      ,@locals ,@body)
 		(export ,(str name)
@@ -288,17 +461,26 @@
    (multiple-value-bind (body env) (compile* body env)
      (let* [(body (apply append body))
             (env (cons name env))]
-       (values `(block (result i32)
+       (values `(block (result ,(gr name) )
 		   (set_local ,($ name) ,exp) ,body) env)) )))
+
+(define (lastbody body)
+  (cond [(null? body)
+	 (error "let must have at least one expression"
+		"Culprit"  body)]
+	[(null? (cdr body)) (type-inference (car body))]
+	[(pair? body) (lastbody (cdr body))]
+	[else (error "let not well formed"  "Culprit" body)]))
 
 (define (compile-let vx body env)
   (let ((exps (map (lambda(e)
 		     `(set_local ,($ (car e))
-			,(compile (cadr e) env))) vx))
+				 ,(compile (cadr e) env))) vx))
+	(typ (lastbody body))
 	(newenv  (append (map car vx) env)))
    (multiple-value-bind (body env) (compile* body newenv )
-     (let [(body (apply append body))]
-       (values `(block (result i32) ,@exps ,body) env)) )))
+     (let [(body (apply append body))]			  
+       (values `(block (result ,typ ) ,@exps ,body) env)) )))
 
 (define (compile-data mempos maxsize body)
   `(,@(compila-data-declaration mempos maxsize body)
