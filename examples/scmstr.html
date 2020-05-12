@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+   <h2>Test string access</h2>
+    <p id="tag"> </p>
+  
+  <script>
+function run(scmstr) {
+    const m   = scmstr.exports.mem;
+    scmstr.exports.initstr();
+    function p(i) {return scmstr.exports.pos(i)+4;}
+    function sz(i) {return scmstr.exports.getsize(i);}
+    console.log(p(0));
+    const str = new Uint8Array(m.buffer, p(1), sz(1));
+    const s = new TextDecoder('utf8').decode(str);
+    document.getElementById("tag").innerHTML= s;}
+fetch("scmstr.wasm").then(reponse =>
+    reponse.arrayBuffer()
+).then(bytes =>
+    WebAssembly.instantiate(bytes, {})
+).then(result =>
+    result.instance
+).then(run);
+  </script>
+</body>
+</html>

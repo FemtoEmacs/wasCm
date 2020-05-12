@@ -1,0 +1,6 @@
+(module
+
+;; How to mix integer and float calculations
+(define (mixed n.x n.y i)
+  (+ n.x n.y (f/i (+.n i i i)) 5.0)) )
+

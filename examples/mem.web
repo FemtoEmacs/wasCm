@@ -1,10 +1,10 @@
 (module
  (mem 4)
 
- (define (setmem n v)
-   (set! n v)
+ (define (setmem.n n v.i)
+   (set! n v.i)
    42)
    
- (define (plusfive n)
-   (fx+ 5 (ref32 n)) ))
+ (define (plusfive.n n)
+   (+ 5 (ref.n n)) ))
 

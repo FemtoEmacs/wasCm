@@ -1,6 +1,6 @@
+;; File: ffib.web
 (module
 
-(define (fib.x n.x)
-    (if.x (< n.x 2.0)
-        1.0
-        (+ (fib.x (- n.x 1.0)) (fib.x (- n.x 2.0))) )))
+(define (fib x)
+    (if (< x 2.0) 1.0
+        (+ (fib (- x 1.0)) (fib (- x 2.0))) )))

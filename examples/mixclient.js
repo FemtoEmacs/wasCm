@@ -1,10 +1,10 @@
 const { readFileSync } = require("fs");
 
 const run = async () => {
-  const buffer = readFileSync("./fib.wasm");
+  const buffer = readFileSync("./mix.wasm");
   const module = await WebAssembly.compile(buffer);
   const instance = await WebAssembly.instantiate(module);
-  console.log("Fibonacci(40)=", instance.exports.fib(40));
+  console.log(instance.exports.mixed(40.8, 25.5, 5));
 };
 
 run();
