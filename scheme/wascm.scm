@@ -4,12 +4,29 @@
 (define (arithop? x)
   (member x '(+ * / -))  )
 
+(define (dindex? s)
+  (cond [ (= (string-length s) 1)
+	  (char-numeric? (string-ref s 0))]
+	[ (= (string-length s) 2)
+	  (char-numeric? (string-ref s 0))
+	  (char-numeric? (string-ref s 1))]
+	[else #f]))
+       
 (define (nres? x)
-  (let [(sfx (suffix (symbol->string x)))]
+  (let [(sfx (suffix (symbol->string x)))
+	(pfx (prefix (symbol->string x)))]
     (or (string=? sfx "n")
 	(string=? sfx "i")
 	(string=? sfx "j")
 	(string=? sfx "k")
+	(and (string=? pfx "n")
+	     (dindex? sfx))
+	(and (string=? pfx "i")
+	     (dindex? sfx))
+	(and (string=? pfx "j")
+	     (dindex? sfx))
+	(and (string=? pfx "k")
+	     (dindex? sfx))	
 	(member x '(i j k n))) ))
 
 (define (gr x)
