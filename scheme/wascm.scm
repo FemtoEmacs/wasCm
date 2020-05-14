@@ -8,6 +8,8 @@
   (let [(sfx (suffix (symbol->string x)))]
     (or (string=? sfx "n")
 	(string=? sfx "i")
+	(string=? sfx "j")
+	(string=? sfx "k")
 	(member x '(i j k n))) ))
 
 (define (gr x)
