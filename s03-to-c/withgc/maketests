@@ -1,0 +1,35 @@
+all:
+	make F=test01
+	make F=test02
+	make F=test03
+	make F=test04
+	make F=test05
+	make F=test06
+	make F=test07
+	make F=test08
+	make F=test09
+	make F=test10
+	make F=test11
+	make F=test12
+	make F=test13
+	make F=test14
+	make F=test15
+	make F=test16
+	make F=test17
+	make F=acc
+	make F=add
+	make F=consin
+	make F=cons
+	make F=fib
+	make F=loop
+	make F=oloop
+	make F=str
+	make F=temperature
+	make F=testand
+	make F=testchr
+	make F=testMth
+	make F=teststrcmp
+	make F=testStr
+
+
+

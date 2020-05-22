@@ -1,0 +1,34 @@
+all:
+	gcc -O3 test01.c -o test01.x
+	gcc -O3 test02.c -o test02.x
+	gcc -O3 test03.c -o test03.x
+	gcc -O3 test04.c -o test04.x
+	gcc -O3 test05.c -o test05.x
+	gcc -O3 test06.c -o test06.x
+	gcc -O3 test07.c -o test07.x
+	gcc -O3 test08.c -o test08.x
+	gcc -O3 test09.c -o test09.x
+	gcc -O3 test10.c -o test10.x
+	gcc -O3 test11.c -o test11.x
+	gcc -O3 test12.c -o test12.x
+	gcc -O3 test13.c -o test13.x
+	gcc -O3 test14.c -o test14.x
+	gcc -O3 test15.c -o test15.x
+	gcc -O3 test16.c -o test16.x
+	gcc -O3 test17.c -o test17.x
+	gcc -O3 acc.c -o acc.x
+	gcc -O3 add.c -o add.x
+	gcc -O3 consin.c -o consin.x
+	gcc -O3 cons.c -o cons.x
+	gcc -O3 fib.c -o fib.x
+	gcc -O3 loop.c -o loop.x
+	gcc -O3 oloop.c -o oloop.x
+	gcc -O3 str.c -o str.x
+	gcc -O3 temperature.c -o temperature.x
+	gcc -O3 testand.c -o testand.x
+	gcc -O3 testchr.c -o testchr.x
+	gcc -O3 testMth.c -o testMth.x
+	gcc -O3 teststrcmp.c -o teststrcmp.x
+	gcc -O3 testStr.c -o testStr.x
+
+
