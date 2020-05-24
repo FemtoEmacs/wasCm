@@ -18,7 +18,7 @@ struct Int {
 
 struct Float {
   enum Tag t ;
-  float value ;
+  double value ;
 } ;
 
 struct Nil {

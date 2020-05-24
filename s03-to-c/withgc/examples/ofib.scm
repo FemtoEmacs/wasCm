@@ -5,6 +5,6 @@
              [else (+ (fib (- n 3))
 		                  (fib (- n 2))
                       (fib (- n 2))) ])) )]
-  (display (fib 40)))
+  (display (fib 35)))
 
 

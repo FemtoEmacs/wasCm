@@ -1,5 +1,10 @@
 ;; Compiled with guile
-(letrec 
-  [(fn (lambda(x y) (if (<= x 5) 42 (mod x y)) ))]
-  (display (fn 29 6)) )
+(letrec
+    [(zz (cons 2 (cons 3  (cons 4 (cons 5 #f)) )))
+     (add (lambda(x) (if (null? x) 0  (+ (car x) (add (cdr x))) ))) ]
+  (begin
+    (display (add zz))) )
+
+
+
 

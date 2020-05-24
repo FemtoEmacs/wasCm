@@ -1,4 +1,4 @@
-;;; File: examples/test17.scm
+
 (define (floopsum env ix sx facc)
     (if (null? sx) facc
         (floopsum env (- ix 1) (cdr sx)
@@ -8,10 +8,14 @@
       (if (< ix 1) fy
           (floop env (- ix 1) (+ fy 0.1)) ))
 
-(define (fadd fx fy) (+. fx fy))
+(define (fadd env fx fy)
+     (+ fx fy))
+
+
+;;; File: examples/test17.scm
 
 (letrec
-    [(xx 41.0)]
+    [(xx 42.0)]
   (begin (display (fadd xx 12.5))
      (display (floop 1000000 0.0)) ))
 

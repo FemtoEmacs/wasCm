@@ -1,5 +1,5 @@
-;; Compiled with guile
-(letrec 
-  [(fn (lambda(x y) (if (> x 15) 42 (quot x y 2)) ))]
-  (display (fn 15 3)) )
+
+(begin
+  (display (+. 5.0 9.5))
+  (display (if (>. 5.0 2.0) (+. 45.0 8.0) (/. 42.0 2.0))))
 
