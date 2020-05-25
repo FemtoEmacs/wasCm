@@ -576,27 +576,27 @@
 ;; plusprimitives
 ; prim? : exp -> boolean
 (define (prim? exp)
-  (or (eq? exp '+)
-      (eq? exp '-)
-      (eq? exp '*)
-      
+  (or (eq? exp '+fx)
+      (eq? exp '-fx)
+      (eq? exp '*fx)
+      (eq? exp '/fx)
+      (eq? exp '<fx)
+      (eq? exp '<=fx)
+      (eq? exp '>fx)
+      (eq? exp '>=fx)
+      (eq? exp '=fx)
+
       (eq? exp '<)
       (eq? exp '<=)
       (eq? exp '>)
       (eq? exp '>=)
       (eq? exp '=)
 
-      (eq? exp '<.)
-      (eq? exp '<=.)
-      (eq? exp '>.)
-      (eq? exp '>=.)
-      (eq? exp '=.)
 
-
-      (eq? exp '+.)
-      (eq? exp '-.)
-      (eq? exp '*.)
-      (eq? exp '/.)
+      (eq? exp '+)
+      (eq? exp '-)
+      (eq? exp '*)
+      (eq? exp '/)
       (eq? exp 'mod)
       (eq? exp 'quot)
       (eq? exp 'cons)
@@ -1249,29 +1249,30 @@
 ; c-compile-prim : prim-exp -> string
 (define (c-compile-prim p)
   (cond
-    ((eq? '+ p)       "__sum")
-    ((eq? '- p)       "__difference")
-    ((eq? '* p)       "__product")
-    ((eq? '+. p)       "__fsum")
-    ((eq? '-. p)       "__fdifference")
-    ((eq? '*. p)       "__fproduct")
-    ((eq? '/. p)       "__fdiv")
+    ((eq? '+fx p)       "__sum")
+    ((eq? '-fx p)       "__difference")
+    ((eq? '*fx p)       "__product")
+    ((eq? '+ p)       "__fsum")
+    ((eq? '- p)       "__fdifference")
+    ((eq? '* p)       "__fproduct")
+    ((eq? '/ p)       "__fdiv")
 
-    ((eq? '<. p)       "__fnumLT")
-    ((eq? '<=. p)      "__fnumLE")
-    ((eq? '>. p)       "__fnumGT")
-    ((eq? '>=. p)      "__fnumGE")
-    ((eq? '=. p)       "__fnumEqual")
+    ((eq? '< p)       "__fnumLT")
+    ((eq? '<= p)      "__fnumLE")
+    ((eq? '> p)       "__fnumGT")
+    ((eq? '>= p)      "__fnumGE")
+    ((eq? '= p)       "__fnumEqual")
 
-    ((eq? '< p)       "__numLT")
-    ((eq? '<= p)      "__numLE")
-    ((eq? '> p)       "__numGT")
-    ((eq? '>= p)      "__numGE")
-    ((eq? '= p)       "__numEqual")
+    ((eq? '<fx p)       "__numLT")
+    ((eq? '<=fx p)      "__numLE")
+    ((eq? '>fx p)       "__numGT")
+    ((eq? '>=fx p)      "__numGE")
+    ((eq? '=fx p)       "__numEqual")
 
 
     ((eq? 'mod p)     "__numREM")
     ((eq? 'quot p)    "__numQUOT")
+    ((eq? '/fx p)     "__numQUOT")
     ((eq? '= p)       "__numEqual")
     ((eq? 'cons p)    "__pairCons")
     ((eq? 'car p)     "__pairCar")
@@ -1658,21 +1659,31 @@ Value __floatP ;
 }")
    (emit 
    "Value __prim_fsum(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in float addition.\\n\"); exit(503);}
   return MakeFloat(a.f.value + b.f.value) ;
 }")
   
   (emit 
    "Value __prim_fproduct(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in float multiplication.\\n\"); exit(503);}
   return MakeFloat(a.f.value * b.f.value) ;
 }")
   
   (emit 
    "Value __prim_fdifference(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in float subtraction.\\n\"); exit(503);}
   return MakeFloat(a.f.value - b.f.value) ;
 }")
 
 (emit 
    "Value __prim_fdiv(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in float division.\\n\"); exit(503);}
+     if (b.f.value == 0.0)
+      {printf(\"Division by 0.\\n\"); exit(503);}
   return MakeFloat(a.f.value / b.f.value) ;
 }")
 
@@ -1727,46 +1738,64 @@ Value __floatP ;
 
  (emit
    "Value __prim_numLT(Value e, Value a, Value b) {
+     if ((a.z.t != INT) || (b.z.t != INT))
+	  {printf(\"Type error in comparation less.\\n\"); exit(503);}
   return MakeBoolean(a.z.value < b.z.value) ;
 }")
 
 (emit
    "Value __prim_numGT(Value e, Value a, Value b) {
+     if ((a.z.t != INT) || (b.z.t != INT))
+      {printf(\"Type error in comparation greater.\\n\"); exit(503);}
   return MakeBoolean(a.z.value > b.z.value) ;
 }")
 
 (emit
    "Value __prim_numGE(Value e, Value a, Value b) {
+     if ((a.z.t != INT) || (b.z.t != INT))
+      {printf(\"Type error in comparation greater equal.\\n\"); exit(503);}
   return MakeBoolean(a.z.value >= b.z.value) ;
 }")
 
   (emit
    "Value __prim_numLE(Value e, Value a, Value b) {
+     if ((a.z.t != INT) || (b.z.t != INT))
+      {printf(\"Type error in comparation less equal.\\n\"); exit(503);}
   return MakeBoolean(a.z.value <= b.z.value) ;
 }")
 
  (emit
    "Value __prim_fnumLT(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in comparation float less.\\n\"); exit(503);}
   return MakeBoolean(a.f.value < b.f.value) ;
 }")
 
 (emit
    "Value __prim_fnumGT(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+	  {printf(\"Type error in comparation float greater.\\n\"); exit(503);}
   return MakeBoolean(a.f.value > b.f.value) ;
 }")
 
 (emit
    "Value __prim_fnumGE(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT || b.f.t != FLOAT))
+      {printf(\"Type error in comparation float greater equal.\\n\"); exit(503);}
   return MakeBoolean(a.f.value >= b.f.value) ;
 }")
 
   (emit
    "Value __prim_fnumLE(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in comparation float less equal.\\n\"); exit(503);}
   return MakeBoolean(a.f.value <= b.f.value) ;
 }")
 
   (emit
    "Value __prim_fnumEqual(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in compation float equal.\\n\"); exit(503);}
   return MakeBoolean(a.f.value == b.f.value) ;
 }")
 
@@ -1960,10 +1989,10 @@ Value __floatP ;
                          (normop (cadr z)))
                    (cddr z)))]))
   (cond [(not (pair? s)) s]
-        [(and (smember (car s) '(* + *.  +.))
+        [(and (smember (car s) '(*fx +fx *  +))
               (> (length (cdr s)) 2))
          (rightassoc s)]
-       [(and (smember (car s) '(quot /. - -.))
+       [(and (smember (car s) '(quot /fx / -fx -))
               (> (length (cdr s)) 2))
          (leftassoc (car s) (cdr s))]
        [(and (pair? s) (equal? (car s) 'quote))

@@ -1,7 +1,7 @@
 (letrec
-    [(fib (lambda(n) (// (&& (< n 2) (+ n 1)  )
-			 (+ (fib (- n 1))
-			    (fib (- n 2))) )))]
+    [(fib (lambda(n) (// (&& (<fx n 2) (+fx n 1)  )
+			 (+fx (fib (-fx n 1))
+			      (fib (-fx n 2))) )))]
   (display (fib 0))
   (display (fib 1))
   (display (fib 2))

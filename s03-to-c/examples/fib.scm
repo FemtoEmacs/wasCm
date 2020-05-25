@@ -1,8 +1,8 @@
 (letrec 
   [(fib (lambda(n)
-          (if (< n 2) 1
-              (+ (fib (- n 1))
-                 (fib (- n 2))) )))]
+          (if (<fx n 2) 1
+              (+fx (fib (-fx n 1))
+                   (fib (-fx n 2))) )))]
   (display (fib 8)))
 
 

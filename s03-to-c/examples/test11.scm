@@ -8,7 +8,7 @@
       (if (< ix 1) fy
           (floop env (- ix 1) (+ fy 0.1)) ))
 
-(define (fadd fx fy) (+. fx fy))
+(define (fadd fx fy) (+ fx fy))
 
 (letrec
     [(xx 41.0)]

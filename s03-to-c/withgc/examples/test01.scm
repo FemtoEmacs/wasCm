@@ -1,5 +1,5 @@
 ;; Compiled with guile
-(letrec [ (fn (lambda(x y) (* x x y y)))
+(letrec [ (fn (lambda(x y) (*fx x x y y)))
           (str "Rose")
           (chr #\c)
           (cns '(3 4 5))
