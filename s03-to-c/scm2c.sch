@@ -1658,21 +1658,31 @@ Value __floatP ;
 }")
    (emit 
    "Value __prim_fsum(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in float addition.\\n\"); exit(503);}
   return MakeFloat(a.f.value + b.f.value) ;
 }")
   
   (emit 
    "Value __prim_fproduct(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+       {printf(\"Type error in float multiplication.\\n\"); exit(503);}
   return MakeFloat(a.f.value * b.f.value) ;
 }")
   
   (emit 
    "Value __prim_fdifference(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in float subtraction.\\n\"); exit(503);}
   return MakeFloat(a.f.value - b.f.value) ;
 }")
 
 (emit 
    "Value __prim_fdiv(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in float division.\\n\"); exit(503);}
+     if (b.f.value == 0.0)
+      {printf(\"Division by 0.\\n\"); exit(503);}
   return MakeFloat(a.f.value / b.f.value) ;
 }")
 
@@ -1727,46 +1737,64 @@ Value __floatP ;
 
  (emit
    "Value __prim_numLT(Value e, Value a, Value b) {
+     if ((a.z.t != INT) || (b.z.t != INT))
+	  {printf(\"Type error in comparation less.\\n\"); exit(503);}
   return MakeBoolean(a.z.value < b.z.value) ;
 }")
 
 (emit
    "Value __prim_numGT(Value e, Value a, Value b) {
+     if ((a.z.t != INT) || (b.z.t != INT))
+      {printf(\"Type error in comparation greater.\\n\"); exit(503);}
   return MakeBoolean(a.z.value > b.z.value) ;
 }")
 
 (emit
    "Value __prim_numGE(Value e, Value a, Value b) {
+     if ((a.z.t != INT) || (b.z.t != INT))
+      {printf(\"Type error in comparation greater equal.\\n\"); exit(503);}
   return MakeBoolean(a.z.value >= b.z.value) ;
 }")
 
   (emit
    "Value __prim_numLE(Value e, Value a, Value b) {
+     if ((a.z.t != INT) || (b.z.t != INT))
+      {printf(\"Type error in comparation less equal.\\n\"); exit(503);}
   return MakeBoolean(a.z.value <= b.z.value) ;
 }")
 
  (emit
    "Value __prim_fnumLT(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in comparation float less.\\n\"); exit(503);}
   return MakeBoolean(a.f.value < b.f.value) ;
 }")
 
 (emit
    "Value __prim_fnumGT(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+	  {printf(\"Type error in comparation float greater.\\n\"); exit(503);}
   return MakeBoolean(a.f.value > b.f.value) ;
 }")
 
 (emit
    "Value __prim_fnumGE(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT || b.f.t != FLOAT))
+      {printf(\"Type error in comparation float greater equal.\\n\"); exit(503);}
   return MakeBoolean(a.f.value >= b.f.value) ;
 }")
 
   (emit
    "Value __prim_fnumLE(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in comparation float less equal.\\n\"); exit(503);}
   return MakeBoolean(a.f.value <= b.f.value) ;
 }")
 
   (emit
    "Value __prim_fnumEqual(Value e, Value a, Value b) {
+     if ((a.f.t != FLOAT) || (b.f.t != FLOAT))
+      {printf(\"Type error in compation float equal.\\n\");exit(503);}
   return MakeBoolean(a.f.value == b.f.value) ;
 }")
 
