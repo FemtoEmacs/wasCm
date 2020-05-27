@@ -628,6 +628,7 @@
       (eq? exp 'float?)
       (eq? exp 'read-file)
       (eq? exp 'write-file)
+      (eq? exp 'read-from-string)      
       (smember exp topenv)  ;; OjO
       ;;(eq? exp (car (cadr def))) ;; OjO
       (eq? exp 'display)))
@@ -1201,6 +1202,7 @@
      " __floatP = MakePrimitive(__prim_floatP) ;\n"
      " __rdFile = MakePrimitive(__prim_rdFile) ;\n"
      " __wrtFile = MakePrimitive(__prim_wrtFile) ;\n"
+     " __rdFromStr   = MakePrimitive(__prim_rdFromStr) ;\n"
      "  " body " ;\n"
      "  return 0;\n"
      " }\n")))
@@ -1304,6 +1306,7 @@
     ((eq? 'float? p) "__floatP")
     ((eq? 'read-file p) "__rdFile")
     ((eq? 'write-file p) "__wrtFile")
+    ((eq? 'read-from-string p) "__rdFromStr")
     [(smember p topenv)
      (fmt  "__~a" p )]
     (else  (defprim-error 'scheme-error
@@ -1567,6 +1570,7 @@ Value __intP ;
 Value __floatP ;
 Value __rdFile ;
 Value __wrtFile ;
+Value __rdFromStr ;
 ")
   
   (for-each 
@@ -1966,6 +1970,19 @@ Value __wrtFile ;
     fclose(fpw);
     return MakeBoolean(0);
 }")
+
+(emit
+  "Value __prim_rdFromStr(Value e, Value a) {
+  if (a.s.t != STR) {
+    printf(\"Type error in read-from-string\\n\");
+	  exit(518);
+  }//end type check
+  int checkParens;
+  checkParens= 0;
+  ss= a.s.value;
+  return parse_term(&checkParens);
+}")
+
 
   ;; Emit lambdas:
   ; Print the prototypes:
