@@ -1,5 +1,6 @@
 (letrec [(xx "Rose of Luxemburg")
          (yy "Anna Bolena")
+	 (str "(cost 42.5)")
          (zz "empty")]
   (begin (display (string-ref xx 0))
          (display (string-ref xx 1))
@@ -12,4 +13,5 @@
 	 (set! zz (read-file "byron.txt"))
          (display (substr xx 8 3))
          (display (string-length xx))
+	 (display (read-from-string str))
          (display zz)))
