@@ -626,7 +626,9 @@
       (eq? exp 'pair?)
       (eq? exp 'integer?)
       (eq? exp 'float?)
-
+      (eq? exp 'read-file)
+      (eq? exp 'write-file)
+      (eq? exp 'read-from-string)
       (smember exp topenv)  ;; OjO
       ;;(eq? exp (car (cadr def))) ;; OjO
       (eq? exp 'display)))
@@ -1198,6 +1200,9 @@
      " __pairP = MakePrimitive(__prim_pairP) ;\n"
      " __intP  = MakePrimitive(__prim_intP) ;\n"
      " __floatP = MakePrimitive(__prim_floatP) ;\n"
+     " __rdFile = MakePrimitive(__prim_rdFile) ;\n"
+     " __wrtFile = MakePrimitive(__prim_wrtFile) ;\n"
+     " __rdFromStr   = MakePrimitive(__prim_rdFromStr) ;\n"
      "  " body " ;\n"
      "  return 0;\n"
      " }\n")))
@@ -1299,6 +1304,9 @@
     ((eq? 'pair? p)   "__pairP")
     ((eq? 'integer? p) "__intP")
     ((eq? 'float? p) "__floatP")
+    ((eq? 'read-file p) "__rdFile")
+    ((eq? 'write-file p) "__wrtFile")
+    ((eq? 'read-from-string p) "__rdFromStr")
     [(smember p topenv)
      (fmt  "__~a" p )]
     (else  (defprim-error 'scheme-error
@@ -1560,6 +1568,9 @@ Value __charP ;
 Value __pairP ;
 Value __intP ;
 Value __floatP ;
+Value __rdFile ;
+Value __wrtFile ;
+Value __rdFromStr ;
 ")
   
   (for-each 
@@ -1916,6 +1927,60 @@ Value __floatP ;
     exit(518);}
 
       return MakeStr(substr(a.s.value, i.z.value, j.z.value));
+}")
+
+(emit
+  "Value __prim_rdFile(Value e, Value a) {
+  if (a.s.t != STR) {
+    printf(\"Type error in read-file\\n\");
+	  exit(518);
+	  }
+  Value v;
+  char *buffer=0;
+  long length;
+  FILE *f= fopen(a.s.value, \"rb\");
+  if (f)
+  { fseek(f, 0, SEEK_END);
+    length= ftell(f);
+    fseek(f, 0, SEEK_SET);
+    buffer = GC_MALLOC(length);
+    if (buffer) { if (!fread(buffer, 1, length, f))
+                   printf(\"Read failed\");
+		}
+    fclose(f);
+    }
+  //*(buffer+length)= 0;
+  v.s.t= STR;
+  v.s.value= buffer;
+  return v;
+}")
+
+(emit
+  "Value __prim_wrtFile(Value e, Value fpth, Value c) {
+    if ( (fpth.s.t != STR) || (c.s.t != STR )) {
+      printf(\"Type error in write-file\\n\");
+      exit(517);
+     }
+    FILE *fpw;
+    fpw= fopen(fpth.s.value, \"w\");
+    if (fpw == NULL) {
+      puts(\"Issue in opening output file\");
+    }
+    fputs(c.s.value, fpw);
+    fclose(fpw);
+    return MakeBoolean(0);
+}")
+
+(emit
+  "Value __prim_rdFromStr(Value e, Value a) {
+  if (a.s.t != STR) {
+    printf(\"Type error in read-from-string\\n\");
+	  exit(518);
+  }//end type check
+  int checkParens;
+  checkParens= 0;
+  ss= a.s.value;
+  return parse_term(&checkParens);
 }")
 
   ;; Emit lambdas:

@@ -9,13 +9,13 @@
 (define (fadd env fx fy)
      (+ fx fy))
 
-(define (fn x y) (* x x y y))
+(define (fn x y) (*fx x x y y))
 
 (letrec [ (chr #\c)
           (cns '(3 4 5))
           (n 42)
           (fl 42.0)]
-  (display (floop 1000 0.0))
+  (display (floop 1000000 0.0))
   (display (string? str))
   (display (char? chr))
   (display (pair? cns))

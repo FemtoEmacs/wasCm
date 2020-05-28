@@ -3,8 +3,8 @@
       (n 0)
       (loop (lambda()
 	      (begin 
-		 (set! i (- i 1))
-		 (set! n (+ n 1))
-                    (if (< i 1) n (loop) ) )))]
+		 (set! i (-fx i 1))
+		 (set! n (+fx n 1))
+                    (if (<fx i 1) n (loop) ) )))]
   (display (loop)))
 

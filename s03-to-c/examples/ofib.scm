@@ -1,10 +1,10 @@
 (letrec 
   [(fib (lambda(n)
-          (cond [ (< n 2) 1]
-             [(< n 3) n]
-             [else (+ (fib (- n 3))
-		                  (fib (- n 2))
-                      (fib (- n 2))) ])) )]
+          (cond [ (<fx n 2) 1]
+             [(<fx n 3) n]
+             [else (+fx (fib (-fx n 3))
+		        (fib (-fx n 2))
+                        (fib (-fx n 2))) ])) )]
   (display (fib 35)))
 
 

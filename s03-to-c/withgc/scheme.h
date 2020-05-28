@@ -204,3 +204,163 @@ extern Value __product ;
 extern Value __display ;
 extern Value __numEqual ;
 
+
+// Read sexpr
+
+char * ss= " (\"Rosa\" (84) (tu (56.3 57) tu) 42)";
+
+void whine(const char *s) {
+  fprintf(stderr, "parse error before ==>%.10s\n", s);}
+
+char *ignore_blank(int e, char *s) {
+  while ( (*s == ' ') || (*s == '\n') ) s++;
+  if ((!*s) && (e != 0)) {
+    fprintf(stderr, "Malformed sexpr -ignore blank\n");
+    exit(512);}
+  return s;
+}
+
+Value parse_string(int *e)
+{
+	Value ex;
+	char buf[256] = {0};
+	int i = 0;
+	ss= ignore_blank(*e, ss);
+        while (*ss) {
+		if (i >= 256) {
+			fprintf(stderr, "string too long:\n");
+			goto fail;
+		}
+		switch (*ss) {
+		case '\\':
+			switch (*++ss) {
+			case '\\':
+			case '"':	buf[i++] = *ss++;
+					continue;
+ 
+			default:	whine(ss);
+					goto fail;
+			}
+		case '"':
+		  ss++;
+		   goto success;
+		default:	buf[i++] = *ss++;
+		}
+	}
+	if ((!*ss) && *e !=0) {printf("Malformed sexpr"); exit(3);}
+fail:
+	return MakeBoolean(0);
+ 
+success:
+	return MakeStr(buf);
+}
+
+Value parse_symbol(int *e){
+	char buf[256] = {0};
+	int i = 0;
+	ss= ignore_blank(*e, ss);
+        while (*ss) {
+		if (i >= 256) {
+			fprintf(stderr, "symbol too long:\n");
+			goto fail;
+		}
+		switch (*ss) {
+		case ' ':
+		case '\n':
+		  ss++;
+		   goto success;
+		default:
+                   if (*ss == ')' || *ss == '(') {goto success;}
+                   else buf[i++] = *ss++;}
+	}
+	if ((!*ss) && *e !=0) {printf("Malformed sexpr"); exit(3);}
+fail:
+	return MakeBoolean(0);
+ 
+success:
+	return MakeStr(buf);}
+
+
+Value parse_int(int *e)
+{
+  int fp= 0;
+  int i = 0;
+  double acc= 0.0;
+	
+	while (*ss) {
+		if (i >= 5) {
+			fprintf(stderr, "integer too long:\n");
+			whine(ss);
+			goto fail;
+		}
+		if ((*ss == ' ') || (*ss == '\n') ) goto success;
+		if (ss == NULL) goto success;
+		if (*ss == ')' || *ss == '(') {
+		  goto success;
+		}
+		if (*ss == '.') {fp= 1; ss++; continue; }
+		if ( ((*ss - 48) >= 0) &&
+		     ((*ss - 48) <= 9) && (!fp))
+		  { acc = acc*10 + (*ss++ - 48); continue;}
+		if ( ((*ss - 48) >= 0) &&
+		     ((*ss - 48) <= 9) && fp)
+		  {fp= fp*10; 
+		    acc= acc + (*ss++ - 48)/((double) fp);
+		    continue; }
+	}
+	if ((!*ss) && *e !=0) {printf("Malformed sexpr"); exit(3);}
+
+fail:
+	return MakeBoolean(0);
+ 
+success:
+	if (!fp) return MakeInt((int) acc);
+	else return MakeFloat(acc);
+}
+
+Value parse_term(int *e);
+
+
+Value parse_list(int *e)
+{
+	Value ex;
+        Value hd;
+	Value tl;
+	hd= parse_term(e);
+	ss= ignore_blank(*e, ss);
+	if (*ss == ')') {
+	  ss++; *e= *e-1;
+	  return NewCons(hd, MakeNil());}
+	
+	ss = ignore_blank(*e, ss);
+	tl= parse_list(e);
+	return NewCons(hd, tl);
+}
+
+
+Value parse_term(int *e)
+{ 
+ 
+  ss= ignore_blank(*e, ss);
+		switch(*ss) {
+		case '(':
+		  ss++;
+		  ss= ignore_blank(*e, ss);
+		  if (*ss == ')') {ss++; return MakeNil();} 
+		  else {
+                    *e= *e+1;
+		    return parse_list(e);}
+		case '"':
+		  ss= ss+1;
+			return parse_string(e);
+		case '0': case '1': case '2': case '3':
+		case '4': case '5': case '6': case '7':
+		case '8': case '9':
+		  return parse_int(e);
+		default:
+		  if ( (*ss >= 'a') && (*ss <= 'z')) 
+		    return parse_symbol(e);
+		}
+	
+	return MakeBoolean(0);
+}
