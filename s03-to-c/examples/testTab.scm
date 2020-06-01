@@ -3,5 +3,5 @@
 (letrec
     [(xx 42.0)]
   (begin
-    (display (table-set 0 0 xx))
-    (display (table-ref 0 0))) )
+    (display (spread-set 0 0 xx))
+    (display (spread-ref 0 0))) )

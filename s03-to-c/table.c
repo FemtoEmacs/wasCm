@@ -58,31 +58,31 @@ Value __rdFromStr ;
 
 struct __env_6 {
  Value int ; 
- Value table_91ref ; 
- Value table_91set ; 
+ Value spread_91ref ; 
+ Value spread_91set ; 
 } ;
 
-struct __env_6* __alloc_env6(Value int, Value table_91ref, Value table_91set){
+struct __env_6* __alloc_env6(Value int, Value spread_91ref, Value spread_91set){
   struct __env_6* txpto = malloc(sizeof(struct __env_6));
   txpto->int = int;
-  txpto->table_91ref = table_91ref;
-  txpto->table_91set = table_91set;
+  txpto->spread_91ref = spread_91ref;
+  txpto->spread_91set = spread_91set;
   return txpto;
 }
 
 
 struct __env_5 {
  Value int ; 
- Value table_91ref ; 
- Value table_91set ; 
+ Value spread_91ref ; 
+ Value spread_91set ; 
  Value xx ; 
 } ;
 
-struct __env_5* __alloc_env5(Value int, Value table_91ref, Value table_91set, Value xx){
+struct __env_5* __alloc_env5(Value int, Value spread_91ref, Value spread_91set, Value xx){
   struct __env_5* txpto = malloc(sizeof(struct __env_5));
   txpto->int = int;
-  txpto->table_91ref = table_91ref;
-  txpto->table_91set = table_91set;
+  txpto->spread_91ref = spread_91ref;
+  txpto->spread_91set = spread_91set;
   txpto->xx = xx;
   return txpto;
 }
@@ -91,16 +91,16 @@ struct __env_5* __alloc_env5(Value int, Value table_91ref, Value table_91set, Va
 struct __env_4 {
  Value int ; 
  Value spread ; 
- Value table_91ref ; 
- Value table_91set ; 
+ Value spread_91ref ; 
+ Value spread_91set ; 
 } ;
 
-struct __env_4* __alloc_env4(Value int, Value spread, Value table_91ref, Value table_91set){
+struct __env_4* __alloc_env4(Value int, Value spread, Value spread_91ref, Value spread_91set){
   struct __env_4* txpto = malloc(sizeof(struct __env_4));
   txpto->int = int;
   txpto->spread = spread;
-  txpto->table_91ref = table_91ref;
-  txpto->table_91set = table_91set;
+  txpto->spread_91ref = spread_91ref;
+  txpto->spread_91set = spread_91set;
   return txpto;
 }
 
@@ -117,42 +117,42 @@ struct __env_3* __alloc_env3(Value int){
 
 
 struct __env_2 {
- Value table_91ref ; 
- Value table_91set ; 
+ Value spread_91ref ; 
+ Value spread_91set ; 
  Value xx ; 
 } ;
 
-struct __env_2* __alloc_env2(Value table_91ref, Value table_91set, Value xx){
+struct __env_2* __alloc_env2(Value spread_91ref, Value spread_91set, Value xx){
   struct __env_2* txpto = malloc(sizeof(struct __env_2));
-  txpto->table_91ref = table_91ref;
-  txpto->table_91set = table_91set;
+  txpto->spread_91ref = spread_91ref;
+  txpto->spread_91set = spread_91set;
   txpto->xx = xx;
   return txpto;
 }
 
 
 struct __env_1 {
- Value table_91ref ; 
- Value table_91set ; 
+ Value spread_91ref ; 
+ Value spread_91set ; 
  Value xx ; 
 } ;
 
-struct __env_1* __alloc_env1(Value table_91ref, Value table_91set, Value xx){
+struct __env_1* __alloc_env1(Value spread_91ref, Value spread_91set, Value xx){
   struct __env_1* txpto = malloc(sizeof(struct __env_1));
-  txpto->table_91ref = table_91ref;
-  txpto->table_91set = table_91set;
+  txpto->spread_91ref = spread_91ref;
+  txpto->spread_91set = spread_91set;
   txpto->xx = xx;
   return txpto;
 }
 
 
 struct __env_0 {
- Value table_91ref ; 
+ Value spread_91ref ; 
 } ;
 
-struct __env_0* __alloc_env0(Value table_91ref){
+struct __env_0* __alloc_env0(Value spread_91ref){
   struct __env_0* txpto = malloc(sizeof(struct __env_0));
-  txpto->table_91ref = table_91ref;
+  txpto->spread_91ref = spread_91ref;
   return txpto;
 }
 
@@ -454,46 +454,46 @@ Value __lambda_2() ;
 Value __lambda_1() ;
 Value __lambda_0() ;
 
-Value __lambda_6(Value env_731, Value spread, Value xx) {
-  Value tmp_739 ; 
-  return (tmp_739 = MakeClosure(__lambda_5,MakeEnv(__alloc_env5(((struct __env_6*)env_731.env.env)->int, ((struct __env_6*)env_731.env.env)->table_91ref, ((struct __env_6*)env_731.env.env)->table_91set, xx))),tmp_739.clo.lam(MakeEnv(tmp_739.clo.env),NewCell(spread))) ;
+Value __lambda_6(Value env_7319, Value spread, Value xx) {
+  Value tmp_7327 ; 
+  return (tmp_7327 = MakeClosure(__lambda_5,MakeEnv(__alloc_env5(((struct __env_6*)env_7319.env.env)->int, ((struct __env_6*)env_7319.env.env)->spread_91ref, ((struct __env_6*)env_7319.env.env)->spread_91set, xx))),tmp_7327.clo.lam(MakeEnv(tmp_7327.clo.env),NewCell(spread))) ;
 }
 
-Value __lambda_5(Value env_732, Value spread) {
-  Value tmp_7310 ; 
-  return (tmp_7310 = MakeClosure(__lambda_4,MakeEnv(__alloc_env4(((struct __env_5*)env_732.env.env)->int, spread, ((struct __env_5*)env_732.env.env)->table_91ref, ((struct __env_5*)env_732.env.env)->table_91set))),tmp_7310.clo.lam(MakeEnv(tmp_7310.clo.env),NewCell(((struct __env_5*)env_732.env.env)->xx))) ;
+Value __lambda_5(Value env_7320, Value spread) {
+  Value tmp_7328 ; 
+  return (tmp_7328 = MakeClosure(__lambda_4,MakeEnv(__alloc_env4(((struct __env_5*)env_7320.env.env)->int, spread, ((struct __env_5*)env_7320.env.env)->spread_91ref, ((struct __env_5*)env_7320.env.env)->spread_91set))),tmp_7328.clo.lam(MakeEnv(tmp_7328.clo.env),NewCell(((struct __env_5*)env_7320.env.env)->xx))) ;
 }
 
-Value __lambda_4(Value env_733, Value xx) {
-  Value tmp_7311 ; 
-  return (tmp_7311 = MakeClosure(__lambda_2,MakeEnv(__alloc_env2(((struct __env_4*)env_733.env.env)->table_91ref, ((struct __env_4*)env_733.env.env)->table_91set, xx))),tmp_7311.clo.lam(MakeEnv(tmp_7311.clo.env),(*(((struct __env_4*)env_733.env.env)->spread.cell.addr) = MakeClosure(__lambda_3,MakeEnv(__alloc_env3(((struct __env_4*)env_733.env.env)->int)))))) ;
+Value __lambda_4(Value env_7321, Value xx) {
+  Value tmp_7329 ; 
+  return (tmp_7329 = MakeClosure(__lambda_2,MakeEnv(__alloc_env2(((struct __env_4*)env_7321.env.env)->spread_91ref, ((struct __env_4*)env_7321.env.env)->spread_91set, xx))),tmp_7329.clo.lam(MakeEnv(tmp_7329.clo.env),(*(((struct __env_4*)env_7321.env.env)->spread.cell.addr) = MakeClosure(__lambda_3,MakeEnv(__alloc_env3(((struct __env_4*)env_7321.env.env)->int)))))) ;
 }
 
-Value __lambda_3(Value env_737, Value i, Value j) {
-  Value tmp_7318 ; 
-  return (tmp_7318 = ((struct __env_3*)env_737.env.env)->int,tmp_7318.clo.lam(MakeEnv(tmp_7318.clo.env),MakeInt(10), MakeInt(11))) ;
+Value __lambda_3(Value env_7325, Value i, Value j) {
+  Value tmp_7336 ; 
+  return (tmp_7336 = ((struct __env_3*)env_7325.env.env)->int,tmp_7336.clo.lam(MakeEnv(tmp_7336.clo.env),MakeInt(10), MakeInt(11))) ;
 }
 
-Value __lambda_2(Value env_734, Value _73_191) {
-  Value tmp_7312 ; 
-  return (tmp_7312 = MakeClosure(__lambda_1,MakeEnv(__alloc_env1(((struct __env_2*)env_734.env.env)->table_91ref, ((struct __env_2*)env_734.env.env)->table_91set, ((struct __env_2*)env_734.env.env)->xx))),tmp_7312.clo.lam(MakeEnv(tmp_7312.clo.env),(*(((struct __env_2*)env_734.env.env)->xx.cell.addr) = MakeFloat(42.0)))) ;
+Value __lambda_2(Value env_7322, Value _73_191) {
+  Value tmp_7330 ; 
+  return (tmp_7330 = MakeClosure(__lambda_1,MakeEnv(__alloc_env1(((struct __env_2*)env_7322.env.env)->spread_91ref, ((struct __env_2*)env_7322.env.env)->spread_91set, ((struct __env_2*)env_7322.env.env)->xx))),tmp_7330.clo.lam(MakeEnv(tmp_7330.clo.env),(*(((struct __env_2*)env_7322.env.env)->xx.cell.addr) = MakeFloat(42.0)))) ;
 }
 
-Value __lambda_1(Value env_735, Value _73_191) {
-  Value tmp_7313 ; 
-  Value tmp_7316 ; 
-  Value tmp_7317 ; 
-  return (tmp_7313 = MakeClosure(__lambda_0,MakeEnv(__alloc_env0(((struct __env_1*)env_735.env.env)->table_91ref))),tmp_7313.clo.lam(MakeEnv(tmp_7313.clo.env),(tmp_7316 = __display,tmp_7316.clo.lam(MakeEnv(tmp_7316.clo.env),(tmp_7317 = ((struct __env_1*)env_735.env.env)->table_91set,tmp_7317.clo.lam(MakeEnv(tmp_7317.clo.env),MakeInt(0), MakeInt(0), (*(((struct __env_1*)env_735.env.env)->xx.cell.addr)))))))) ;
+Value __lambda_1(Value env_7323, Value _73_191) {
+  Value tmp_7331 ; 
+  Value tmp_7334 ; 
+  Value tmp_7335 ; 
+  return (tmp_7331 = MakeClosure(__lambda_0,MakeEnv(__alloc_env0(((struct __env_1*)env_7323.env.env)->spread_91ref))),tmp_7331.clo.lam(MakeEnv(tmp_7331.clo.env),(tmp_7334 = __display,tmp_7334.clo.lam(MakeEnv(tmp_7334.clo.env),(tmp_7335 = ((struct __env_1*)env_7323.env.env)->spread_91set,tmp_7335.clo.lam(MakeEnv(tmp_7335.clo.env),MakeInt(0), MakeInt(0), (*(((struct __env_1*)env_7323.env.env)->xx.cell.addr)))))))) ;
 }
 
-Value __lambda_0(Value env_736, Value _73_191) {
-  Value tmp_7314 ; 
-  Value tmp_7315 ; 
-  return (tmp_7314 = __display,tmp_7314.clo.lam(MakeEnv(tmp_7314.clo.env),(tmp_7315 = ((struct __env_0*)env_736.env.env)->table_91ref,tmp_7315.clo.lam(MakeEnv(tmp_7315.clo.env),MakeInt(0), MakeInt(0))))) ;
+Value __lambda_0(Value env_7324, Value _73_191) {
+  Value tmp_7332 ; 
+  Value tmp_7333 ; 
+  return (tmp_7332 = __display,tmp_7332.clo.lam(MakeEnv(tmp_7332.clo.env),(tmp_7333 = ((struct __env_0*)env_7324.env.env)->spread_91ref,tmp_7333.clo.lam(MakeEnv(tmp_7333.clo.env),MakeInt(0), MakeInt(0))))) ;
 }
 
 int main (int argc, char* argv[]) {
-  Value tmp_738 ; 
+  Value tmp_7326 ; 
 argtop= argc ;
 for (int i=0; i<argc;i++) {arg[i]= MakeStr(argv[i]) ;}
   __sum         = MakePrimitive(__prim_sum) ;
@@ -544,7 +544,7 @@ for (int i=0; i<argc;i++) {arg[i]= MakeStr(argv[i]) ;}
  __rdFile = MakePrimitive(__prim_rdFile) ;
  __wrtFile = MakePrimitive(__prim_wrtFile) ;
  __rdFromStr   = MakePrimitive(__prim_rdFromStr) ;
-  (tmp_738 = MakeClosure(__lambda_6,MakeEnv(__alloc_env6(int, table_91ref, table_91set))),tmp_738.clo.lam(MakeEnv(tmp_738.clo.env),MakeBoolean(0), MakeBoolean(0))) ;
+  (tmp_7326 = MakeClosure(__lambda_6,MakeEnv(__alloc_env6(int, spread_91ref, spread_91set))),tmp_7326.clo.lam(MakeEnv(tmp_7326.clo.env),MakeBoolean(0), MakeBoolean(0))) ;
   return 0;
  }
 
