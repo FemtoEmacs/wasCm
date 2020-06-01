@@ -291,7 +291,7 @@
                      [else (loop (cdr args)
                               (str-app str "Value " 
                                 (symbol->string (car args)) "," ))]))
-               "){\n")]
+	     "){\n")]
 	[else (defprim-error 'value-declaration
 	             "Shape error -- ~a!" (list s) )]))
   
@@ -346,8 +346,21 @@
                (scheme-args (cdr c) ) ", ")
           ")) ;\n")))
 
+
+(define (mktable s)
+  (let ((lref (list (car s) (cons (id-ref (caadr s)) (cdadr s)) (caddr s)))
+	(lset (list (car s) (cons (id-set (caadr s)) (cdadr s)) (caddr s))))
+    (list lref lset)))
+
 (define (scheme-side s)
-  (cond [(wellformed? s)
+  (cond [(table? s)
+	 (define nnl (mktable s))
+	 (string-append
+	  (make-args (car nnl))
+	  (mkcall (cadr (car nnl)))
+	  (make-args (cadr nnl))
+	  (mkcall (cadr (cadr nnl)) ))]
+	[(wellformed? s)
 	 (string-append
 	  (make-args s)
 	  (mkcall (cadr s))
@@ -403,6 +416,46 @@
   (and (pair? s) (symbol? (car s))
            (smember (car s) '(+ - / * % < > <= >=))
 	   (pair? (cdr s)) (pair? (cddr s)) ))
+
+;; id-ref: exp -> exp
+(define (id-ref nm)
+   (string->symbol (string-append (symbol->string nm) "_ref")))
+
+;; id-set: exp -> exp 
+(define (id-set nm)
+   (string->symbol (string-append (symbol->string nm) "_set")))
+
+
+(define (table? s)
+  (and (pair? s) (equal? (car s) 'define)
+       (and (symbol? (car   (cadr s)))
+	    (symbol? (cadr  (cadr s)))
+	    (symbol? (caddr (cadr s))) )
+       (and (smember (caaddr s) '(float double int Value))
+	    (integer? (cadr (caddr s)))
+	    (integer? (caddr (caddr s))) )))
+
+(define (table-def s)
+  (let ((name (car (cadr s)))
+	(type (caaddr s))
+	(values (cdr (caddr s))))
+    (fmt "~a ~a\[~a\]\[~a\];" type name (car values) (cadr values)) ))
+    
+(define (table-set s)
+  (let ((name (car (cadr s)))
+	(type (caaddr s))
+	(var  (cdr (cadr s))))
+    (fmt "~a ~a(int ~a,int ~a,~a d){\n\t~a\[~a\]\[~a\]=d;\n\treturn d;}"
+	 type (id-set name) (car var) (cadr var)
+	 type name (car var) (cadr var)) ))
+
+(define (table-ref s)
+  (let ((name (car (cadr s)))
+	(type (caaddr s))
+	(var (cdr (cadr s)) ))
+    (fmt "~a ~a(int ~a, int ~a){\n\treturn ~a\[~a\]\[~a\];}"
+	 type (id-ref name) (car var) (cadr var)
+	 name (car var) (cadr var)) ))
 
 (define (ccomp  s env vars)
 
@@ -461,20 +514,22 @@
 	[else (defprim-error 'make-scheme-arg
 	        "Illegal cc expr -- ~a!" (list s) )]))	 
   (fmt  "return ~a" (cco s vars)) ))
-  
+
+
 (define (cside s)
   (let* [ (z (if (wellformed? s)
 		            (symbol->string (caadr s))
 		            (defprim-error 'fun-id
 		            "Illegal cside -- ~a" (list s) )))
 	        (c (string-ref z 0))
-          (sexpr? (equal? c #\s))]
- 
-  (str-app (fun-id s) "("
-     (append-with-separator
-       (cdecls  (cdr (cadr s))   ) "," ) "){\n"
-     (ccomp  (car (cddr s)) (cadr (cadr s)) (cdr (cadr s)) )
-     ";}\n")))
+		(sexpr? (equal? c #\s))]
+    (if (table? s)
+	(str-app (table-def s) "\n\n" (table-set s) "\n\n" (table-ref s) "\n\n")
+	(str-app (fun-id s) "("
+		 (append-with-separator
+		  (cdecls  (cdr (cadr s))   ) "," ) "){\n"
+		  (ccomp  (car (cddr s)) (cadr (cadr s)) (cdr (cadr s)) )
+		  ";}\n")) ))
      
 
 
@@ -1641,6 +1696,7 @@ Value __rdFromStr ;
 
 (let loop [(df def)]
   (when (pair? df)
+    (emit (str-app df "//def"))
     (emit (cside (car df)))
     (emit (scheme-side (car df)))
     (loop (cdr df)) )) ;; OjO
