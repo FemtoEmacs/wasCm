@@ -9,7 +9,7 @@
          (display (string-set! xx 0 #\B))
          (display xx)
 	 (write-file "byron.txt"
-		     "She walks in beauty, like the night\\n")
+		     "She walks in beaty, like the night\\n")
 	 (set! zz (read-file "byron.txt"))
          (display (substr xx 8 3))
          (display (string-length xx))

@@ -631,28 +631,27 @@
 ;; plusprimitives
 ; prim? : exp -> boolean
 (define (prim? exp)
-  (or   (eq? exp '+fx)
-      (eq? exp '-fx)
-      (eq? exp '*fx)
+  (or (eq? exp '+)
+      (eq? exp '-)
+      (eq? exp '*)
       
-      (eq? exp '<fx)
-      (eq? exp '<=fx)
-      (eq? exp '>fx)
-      (eq? exp '>=fx)
-      (eq? exp '=fx)
-
       (eq? exp '<)
       (eq? exp '<=)
       (eq? exp '>)
       (eq? exp '>=)
       (eq? exp '=)
 
+      (eq? exp '<.)
+      (eq? exp '<=.)
+      (eq? exp '>.)
+      (eq? exp '>=.)
+      (eq? exp '=.)
 
-      (eq? exp '+)
-      (eq? exp '-)
-      (eq? exp '*)
-      (eq? exp '/)
 
+      (eq? exp '+.)
+      (eq? exp '-.)
+      (eq? exp '*.)
+      (eq? exp '/.)
       (eq? exp 'mod)
       (eq? exp 'quot)
       (eq? exp 'cons)
@@ -1310,26 +1309,27 @@
 ; c-compile-prim : prim-exp -> string
 (define (c-compile-prim p)
   (cond
-    ((eq? '+fx p)       "__sum")
-    ((eq? '-fx p)       "__difference")
-    ((eq? '*fx p)       "__product")
-    ((eq? '+ p)       "__fsum")
-    ((eq? '- p)       "__fdifference")
-    ((eq? '* p)       "__fproduct")
-    ((eq? '/ p)       "__fdiv")
+    ((eq? '+ p)       "__sum")
+    ((eq? '- p)       "__difference")
+    ((eq? '* p)       "__product")
+    ((eq? '+. p)       "__fsum")
+    ((eq? '-. p)       "__fdifference")
+    ((eq? '*. p)       "__fproduct")
+    ((eq? '/. p)       "__fdiv")
 
-    ((eq? '< p)       "__fnumLT")
-    ((eq? '<= p)      "__fnumLE")
-    ((eq? '> p)       "__fnumGT")
-    ((eq? '>= p)      "__fnumGE")
-    ((eq? '= p)       "__fnumEqual")
+    ((eq? '<. p)       "__fnumLT")
+    ((eq? '<=. p)      "__fnumLE")
+    ((eq? '>. p)       "__fnumGT")
+    ((eq? '>=. p)      "__fnumGE")
+    ((eq? '=. p)       "__fnumEqual")
 
-    ((eq? '<fx p)       "__numLT")
-    ((eq? '<=fx p)      "__numLE")
-    ((eq? '>fx p)       "__numGT")
-    ((eq? '>=fx p)      "__numGE")
-    ((eq? '=fx p)       "__numEqual")
-    
+    ((eq? '< p)       "__numLT")
+    ((eq? '<= p)      "__numLE")
+    ((eq? '> p)       "__numGT")
+    ((eq? '>= p)      "__numGE")
+    ((eq? '= p)       "__numEqual")
+
+
     ((eq? 'mod p)     "__numREM")
     ((eq? 'quot p)    "__numQUOT")
     ((eq? '= p)       "__numEqual")
@@ -2082,10 +2082,10 @@ Value __rdFromStr ;
                          (normop (cadr z)))
                    (cddr z)))]))
   (cond [(not (pair? s)) s]
-        [(and (smember (car s) '(*fx +fx *  +))
+        [(and (smember (car s) '(* + *.  +.))
               (> (length (cdr s)) 2))
          (rightassoc s)]
-       [(and (smember (car s) '(quot / -fx -))
+       [(and (smember (car s) '(quot /. - -.))
               (> (length (cdr s)) 2))
          (leftassoc (car s) (cdr s))]
        [(and (pair? s) (equal? (car s) 'quote))
