@@ -1,4 +1,3 @@
-;; Compiled with guile
 (letrec [ (fn (lambda(x y) (*fx x x y y)))
           (str "Rose")
           (chr #\c)

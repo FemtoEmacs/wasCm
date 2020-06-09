@@ -1,3 +1,4 @@
+;; Test closure
 (letrec 
     [(mkcnt (lambda(n)
 	      (lambda()

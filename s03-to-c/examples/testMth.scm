@@ -1,3 +1,4 @@
+;; Test errors in arithmetic types and operations
 (letrec 
   [(xx 42) (yy 42.0)]
   ;;(display (+ xx (* yy 3))) ;; Should raise error
