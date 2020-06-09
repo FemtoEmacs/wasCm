@@ -1720,9 +1720,655 @@ pen drive appears at the \verb|/Volume/| folder.
 The commands {\bf cp}, {\bf rm} and {\bf ls}
 see the pen drive as a normal folder.
 
-\chapter*{Read.me}
+\chapter{Might Scheme}
 
-WebAssembly is a Instruction Set Architecture (ISA) for
+As you will learn in the following chapters, there is
+an Instruction Set Architecture (ISA) for compiling
+code that can run in most modern browsers. Therefore,
+a web designer can customize the Internet pages to
+fit the necessity of a given client. To summarize the
+situation, the web page contains code that can be
+executed by the browser, which the client uses to view
+the page, and this code can add tailored
+material and modify the existing text in order to suit
+the interests of the reader. This kind of active
+web content is called Single Page Application, or SPA.
+
+When Lisp was created, and Scheme standards were established,
+there was no safe method for sending compiled code over the
+Internet for execution in the client's machine. Since the
+evolution of the web did not keep up with the development of
+compilers, Scheme implementors did not have out of the box
+solutions for writing Single Page Applications (SPAs).
+As a consequence, most Scheme implementations do not have
+a porting to the virtual machine that people use for delivering
+SPAs. Thus a group of web designers created Might Scheme,
+a bare-bones implementation of the Scheme language that one
+can use to generate Single Page Applications. The idea is to
+discontinue the project as soon as Standard Scheme compilers
+offer tools for generating Single Page Applications.
+
+Might Scheme was so named after Matthew Might, a Computer Scientist
+and pioneer in Precision Medicine, who laid the foundations onto
+which the Might Scheme was built. Might Scheme generates code for
+a low level language called C. Then a C compiler produces the
+final application that the client can execute in his or her machine.
+
+This chapter discusses a collection of simple examples that were
+designed both as tests for checking whether the compiling is working
+correctly, and as introductory material on Might Scheme.
+
+\section{The letrec-form}
+
+The letrec-form introduces local identifiers
+and variables through a list of \verb|(id value)| 
+pairs. When using a letrec binding, the programmer must
+bear in mind that it needs parentheses for
+grouping together the set of \verb|(id value)| pairs,
+and also parentheses for each pair. Let us examine
+a very simple example to make things clear. Use emacs to
+type the program of listing~\ref{fig:check-types}.
+
+\begin{figure}[!h]
+\begin{fmpage}{0.8\linewidth}
+\begin{verbatim}
+;; File: ~/wasCm/s03-to-c/ids.scm
+
+(letrec [ (str "Rose of Luxemburg")
+          (chr #\c)
+          (cns '(3 4 5))
+          (n 42)
+          (fl 42.0) ]
+  (display "Check whether str is a string")
+  (display (string? str))
+  (display "Check whether cns is a pair")
+  (display (pair? cns))
+  (display "Check whether str is a chair")
+  (display (char? chr))
+  (display "Check whether n is integer")
+  (display (integer? n))
+  (display "Check whether n is float")
+  (display (float? n))
+  (display "Check whether fl is float")
+  (display (float? fl)) )
+\end{verbatim}
+\end{fmpage}
+
+\begin{fmpage}{0.8\linewidth}
+\begin{verbatim}
+
+\end{verbatim}
+\end{fmpage}
+\caption{A few identifiers}
+\label{fig:check-types}
+\end{figure}
+
+Before trying to understand the program of listing
+\ref{fig:check-types}, let us see whether it works,
+since there is no point in studying buggy code.
+
+The compilation process aims at transforming the scheme
+program depicted on listing~\ref{fig:check-types} into
+machine code. As previously mentioned, this task will be
+accomplished in two steps, first translate Scheme
+to C, second compile the C code.
+
+The program that tranlates from Might Scheme to C
+is written in Bigloo, therefore you will need
+Bigloo Scheme to compile it. From emacs, type the
+command \verb|M-x shell| to open a term and startup
+the Bigloo interpreter (keep the \keys{Alt} key down,
+then press \verb|x|; at the \verb|M-x| prompt,
+type \verb|shell|).
+
+From the shell, enter the Bigloo interpreter with
+the command \verb|bigloo -s| as shown in
+listing~\ref{fig:compile-and-run}. From
+Bigloo, load the \verb|scm2c.scm| program, which
+will perform the translation from Might Scheme
+to C. The command
+\begin{quote}
+  \verb|(compit "ids.scm" "ids.c")|
+\end{quote}
+will generate the C code. Below, you can see how to
+compile and run the C code that the \verb|compit|
+command generated.
+\begin{figure}[!h]
+\begin{fmpage}{0.8\linewidth}
+\begin{verbatim}
+~/wasCm/s03-to-c$ bigloo -s
+
+1:=> (load "scm2c.sch")
+scm2c.sch
+1:=> (compit "ids.scm" "ids.c")
+#unspecified
+1:=> (exit)
+~/wasCm/s03-to-c$ gcc -O3 ids.c -o ids.x
+~/wasCm/s03-to-c$ ./ids.x 
+Check whether str is a string
+#t
+Check whether cns is a pair
+#t
+Check whether str is a chair
+#t
+Check whether n is integer
+#t
+Check whether n is float
+#f
+Check whether fl is float
+#t
+\end{verbatim}
+\end{fmpage}
+
+\begin{fmpage}{0.8\linewidth}
+\begin{verbatim}
+
+\end{verbatim}
+\end{fmpage}
+\caption{Compiling and running a program}
+\label{fig:compile-and-run}
+\end{figure}
+
+Listing~\ref{fig:check-types} creates five
+ids, which are \verb|str|, \verb|chr|,
+\verb|cns|, \verb|n| and \verb|fl|. The
+two lines below check whether \verb|str| id
+represents a string.
+\begin{quote}
+\begin{verbatim}
+(display "Check whether str is a string")
+(display (string? str))
+\end{verbatim}
+\end{quote}
+Since \verb|str| is indeed a string, the
+result of \verb|(display (string? str))|
+is \verb|#t|, which is the Boolean value
+\verb|true|.
+
+The predicate \verb|(pair? cns)| returns
+\verb|#t| if the \verb|cns| id is a list,
+otherwise it produces the Boolean value
+\verb|#f| that stands for false. Later on,
+you will see that \verb|(pair? x)| is
+a very important predicate, since it
+tells us whether a process reached the end
+of a list or not. By the way, predicate
+is a function that returns \verb|#t| (true)
+or \verb|#f| (false), to indicate whether
+a relation holds or a feature is present.
+Thus, \verb|(char? x)| verifies whether
+\verb|x| is a char, \verb|(integer? i)|
+returns \verb|#t|, when \verb|i| is an
+integer, and \verb|(float? f)| checks
+whether \verb|f| is a floating point
+number.
+
+\section{First test of Might Scheme}
+
+The program \verb|examples/test01.scm| shows
+that the value of an identifier can be a
+function.
+\begin{figure}[!h]
+\begin{fmpage}{0.8\linewidth}
+\begin{verbatim}
+(letrec [ (fn (lambda(x y) (*fx x x y y)))
+          (cns '(3 4 5))
+          (n 42)
+          (fl 42.0)]
+  (display (pair? cns))
+  (display (integer? n))
+  (display (float? fl))
+  (display (fn 3 9)) )
+\end{verbatim}
+\end{fmpage}
+\begin{fmpage}{0.8\linewidth}
+\begin{verbatim}
+~/wasCm/s03-to-c$ bigloo -s
+1:=> (load "scm2c.sch")
+1:=> (compit "examples/test01.scm" "test01.c")
+1:=> (exit)
+~/wasCm/s03-to-c$ gcc -O3 test01.c -o test01.x
+~/wasCm/s03-to-c$ ./test01.x 
+#t
+#t
+#t
+729
+\end{verbatim}
+\end{fmpage}
+\caption{examples/test01.scm}
+\label{examples/test01.scm}
+\end{figure}
+
+In this case, the arguments of
+the function are introduced by a lambda
+form. The arguments of the \verb|fn|
+function are represented by the \verb|x|
+and \verb|y| variables.
+
+When one applies \verb|(fn 3 9)| to the values
+\verb|3| and \verb|9|, \verb|x| is replaced
+by \verb|3| and \verb|y| is replaced by
+\verb|9| in the expression \verb|(*fx x x y y)|.
+The function \verb|*fx| that appears in this
+expression multiplies integer numbers.
+Since \verb|x| is equal to \verb|3| and \verb|y|
+is equal to \verb|9|, one should expect that
+\verb|(*fx x x y y)| produces 729 as a result.
+
+\section{Floating point operations}
+Below, you can see the \verb|examples/test02.scm|
+program, which is one of the tests that the
+developers of Might Scheme used to verify whether
+the compiler is working properly.
+
+\begin{verbatim}
+~/wasCm/s03-to-c$ cat examples/test02.scm 
+;; Test arithmetic operators with many args
+;; Floating point operations
+(letrec 
+    [(ifun (lambda(x y)
+	     (if (=fx x 5)
+		 (/ (+ 42.0 42.0 42.0 84.0) 2.0 3.0)
+		 (*fx x y)) ))]
+  (display (ifun 5 9)) )
+
+~/wasCm/s03-to-c$ bigloo -s
+
+1:=> (load "scm2c.sch")
+scm2c.sch
+1:=> (compit "examples/test02.scm" "test02.c")
+#unspecified
+1:=> (exit)
+~/wasCm/s03-to-c$ gcc -O3 test02.c -o test02.x
+~/wasCm/s03-to-c$ ./test02.x 
+35.0000
+\end{verbatim}
+
+You certainly will have noticed that Might Scheme
+uses a set of operators to work with integer
+numbers and a different set to perform floating
+point calculations. In the case of integers,
+one uses \verb|*fx|, \verb|+fx| and \verb|-fx|
+for multiplication, addition and subtraction,
+respectively. The function \verb|quot| produces
+the quotient of integer division, while \verb|mod|
+calculates the remainder.
+
+Besides arithmetic operations, integer numbers
+also have a separate set of predicates:
+\verb|(=fx p q)| checks whether \verb|p| is
+equal to \verb|q|, \verb|(>fx p q)| produces
+\verb|#t| if \verb|p| is greater than \verb|p|,
+\verb|(<fx p q)| verifies whether \verb|p| is
+less than \verb|q|, \verb|(<=fx p q)| checks
+whether \verb|p| is less or equal \verb|q|,
+and finally \verb|(>=fx p q)| checks whether
+\verb|p| is greater or equal to \verb|q|.
+
+In the case of floating point numbers, the
+arithmetic calculations are performed by
+the following operators: \verb|*| for
+multiplication, \verb|+| for addition,
+\verb|-| for subtraction and \verb|/| for
+division.
+
+\section{Integer comparison}
+
+The \verb|examples/test03.scm| program tests
+all predicates that one can use to perform
+comparisons between integers.
+
+\begin{verbatim}
+~/wasCm/s03-to-c$ cat examples/test03.scm 
+
+(letrec 
+  [ (f03 (lambda(x y) (if (<fx x 5) 42 (*fx x x y)) ))
+    (f04 (lambda(x y) (if (<=fx x 5) 42 (*fx x y)) ))
+    (f05 (lambda(x y) (if (>=fx x 5) 42 (*fx x y)) ))
+    (f06 (lambda(x y) (if (>fx x 5) 42 (*fx x y)) ))
+    (f07 (lambda(x y) (if (<=fx x 5) 42 (mod x y)) ))
+    (f08 (lambda(x y) (if (>fx x 15) 42 (quot x y 2)) ))]
+  (display (f03 5 9)) 
+  (display (f04 5 9))
+  (display (f05 5 9))
+  (display (f06 5 9))
+  (display (f07 29 6))
+  (display (f08 15 3)))
+
+~/wasCm/s03-to-c$ bigloo -s
+
+1:=> (load "scm2c.sch")
+scm2c.sch
+1:=> (compit "examples/test03.scm" "test03.c")
+#unspecified
+1:=> (exit)
+~/wasCm/s03-to-c$ gcc -O3 test03.c -o test03.x
+~/wasCm/s03-to-c$ ./test03.x 
+225
+42
+42
+45
+5
+2
+\end{verbatim}
+
+\section{cons pair}
+
+In mathematics and computer science, an ordered
+pair is a structure containing two objects.
+The order in which the objects appear in the
+pair matters, which means that the pair
+\verb|(cons a b)| is different from the pair
+\verb|(cons b a)|.
+
+In order to work with pairs, one needs three functions.
+The first of these functions is the \verb|cons| procedure,
+which builds the pair. The \verb|(car (cons x y))|
+produces the first element of the pair, which is \verb|x|,
+while \verb|(cdr (cons x y))| calculates the second element.
+Examples \verb|test04.scm| and \verb|test05.scm| can be
+used to verify whether Might Scheme works with an ordered
+pair properly.
+\begin{quote}
+\begin{verbatim}
+~/wasCm/s03-to-c$ cat examples/test04.scm 
+(letrec
+  [(xx (cons 3 5))
+   (fn (lambda(x y) (if (>fx x 9) 42 (+fx x y)) ))]
+  (display (fn (fn (car xx) 9) 5) ))
+
+~/wasCm/s03-to-c$ cat examples/test05.scm 
+(letrec
+  [(xx (cons 3 4))
+   (fn (lambda(x y) (if (>fx x 9) 42 (+fx x y)) ))]
+  (display (fn (fn (car xx) (cdr xx)) 9)))
+
+~/wasCm/s03-to-c$ bigloo -s
+
+1:=> (load "scm2c.sch")
+scm2c.sch
+1:=> (compit "examples/test04.scm" "test04.c")
+#unspecified
+1:=> (compit "examples/test05.scm" "test05.c")
+#unspecified
+1:=> (exit)
+~/wasCm/s03-to-c$ gcc -O3 test04.c -o test04.x
+~/wasCm/s03-to-c$ gcc -O3 test05.c -o test05.x
+~/wasCm/s03-to-c$ ./test04.x 
+42
+~/wasCm/s03-to-c$ ./test05.x 
+16
+\end{verbatim}
+\end{quote}
+
+\paragraph{Printing ordered pairs.} Lisp has
+a tree representation for an ordered pair,
+which it uses internally to perform computations,
+and an external representation, that is used to
+facilitate  communication with people. In the external
+representation, a list is shown by the sequence
+of its elements placed between parentheses. In order
+to implement this external representation, one
+needs a function, which can read a list from a string,
+and the \verb|(display s)| function, which prints
+the list \verb|s|.  Example \verb|test06| checks
+whether \verb|display| is working correctly.
+\begin{quote}
+\begin{verbatim}
+~/wasCm/s03-to-c$ cat examples/test06.scm 
+(letrec
+     [(zz (cons 4 #f))]
+  (display zz))
+~/wasCm/s03-to-c$ bigloo -s
+
+1:=> (load "scm2c.sch")
+scm2c.sch
+1:=> (compit "examples/test06.scm" "test06.c")
+#unspecified
+1:=> (exit)
+~/wasCm/s03-to-c$ gcc -O3 test06.c -o test06.x
+~/wasCm/s03-to-c$ ./test06.x 
+(4)
+\end{verbatim}
+\end{quote}
+
+
+ In Lisp, a list of elements is implemented as a chain
+ of pairs, each pair containing a point to a list element
+ and another pointer to the next pair. Let us assume
+ that \verb|zz| points to the list \verb|(2 3 4 5)|.
+ This list is constituted of the following chain of pairs:
+\begin{quote}
+\begin{verbatim}
+[*|*]--->[*|*]--->[*|*]--->[*|*]--->()
+ |        |        |        |        
+ 2        3        4        5       
+\end{verbatim}
+\end{quote}
+The examples \verb|test06.scm| and \verb|test07.scm| check
+whether Might Scheme can deal with such a representation
+of lists. 
+
+In Might Scheme, the \verb|NULL| pointer, which
+represents the empty list, substitutes the Boolean value
+\verb|#f| in applications such as \verb|(cons 5 #f)|.
+
+As mentioned before, the \verb|test06.scm| example just
+checks whether the \verb|display| procedure is working
+properly. Example \verb|test07.scm| verifies whether
+Might Scheme is mature enough for implementing an
+algorithm, which can process all elements of a list,
+as discussed in section~\ref{sec:average},
+page~\pageref{sec:average}.
+
+In order to go through a list, one needs a predicate
+\verb|(null? x)| that checks whether the algorithm
+reached the end of the sequence. One needs also an
+\verb|if-|statement that produces a trivial solution,
+when \verb|(null? x)| is \verb|#t| true, and breaks the
+original list into shorter sublists, when it is not.
+Such a strategy of processing lists is said to be
+recursive, and will be discussed in detail later in
+this book.
+
+\begin{verbatim}
+~/wasCm/s03-to-c$ cat examples/test07.scm 
+(letrec
+    [(zz (cons 2 (cons 3  (cons 4 (cons 5 #f)) )))
+     (add (lambda(x) (if (null? x) 0 
+                        (+fx (car x) (add (cdr x))) ))) ]
+  (begin (display (add zz))) )
+~/wasCm/s03-to-c$ bigloo -s
+
+1:=> (load "scm2c.sch")
+scm2c.sch
+1:=> (compit "examples/test07.scm" "test07.c")
+#unspecified
+1:=> (exit)
+~/wasCm/s03-to-c$ gcc -O3 test07.c -o test07.x
+~/wasCm/s03-to-c$ ./test07.x 
+14
+\end{verbatim}
+
+\paragraph{Cartesian plane.} In linear algebra, numbers
+are called scalars. An ordered pair of scalars is called
+a 2-dimensional vector. Historically, two dimensional
+vectors are very important, because the French philosopher
+René Descartes famously described their use for determining
+a geometric point on a plane.
+
+ \begin{tikzpicture}
+    \path [draw, help lines, opacity=.5]  (-4,-4) grid (4,4);
+    \foreach \i in {1,...,4}
+    \draw (\i,2.5pt) -- +(0,-5pt)
+    node [anchor=north, font=\small] {$$} (-\i,2.5pt)
+    -- +(0,-5pt) node [anchor=north, font=\small] {$$}
+    (2.5pt,\i) -- +(-5pt,0) node [anchor=east, font=\small]
+       {$$} (2.5pt,-\i) -- +(-5pt,0)
+      node [anchor=east, font=\small] {$$};
+    \draw [->] (-4,0) -- (4,0) node [anchor=south] {$x$};
+    \draw [->] (0,-3) -- (0,3) node [anchor=west] {$y$};
+    \path [draw=blue, ultra thick, text=blue, densely dashed] (0,2)
+    node [anchor=south west] {$2$} -| (3,0)
+    node [anchor=south west] {$3$}
+         node [anchor=south west, midway] {$(3,2)$};
+ \end{tikzpicture}
+
+\section{Low level program}
+There is a semantic gap between the the concepts that
+a programmer uses to reason and the machine that
+will execute code. High level languages, such as
+Scheme and Lisp, offer bridges to cross this gap.
+For instance, there is no ordered pair in the
+instruction set architecture that your computer
+uses to execute code, but Might Scheme provides
+the tools to build pairs with the operations that
+are available to the computer. Sometimes, however,
+one needs to write procedures that talk directly
+to the computer through operations, which map closely
+to machine instructions. In Might Scheme, these
+procedures must carry an \verb|env| argument that
+provides the environment structure, which all functions
+must receive. In Might Scheme, these primitive functions
+are invariably created though the {\em define-form}.
+\begin{quote}
+\begin{verbatim}
+;; File: examples/test10.scm
+(define (fadd env fx fy)
+  (+ fx fy))
+
+(display (fadd 17.0 3.0))
+\end{verbatim}
+\end{quote}
+
+A usual method of passing data to a compiled program is
+through command line arguments. Consider the program below,
+which was called with the \verb|Ed| argument.
+
+\begin{verbatim}
+~/wrk/wasCm/s03-to-c$ cat examples/test12.scm
+(begin (display "Hello") (display (arg 0)) (display (arg 1)))
+
+~/wrk/wasCm/s03-to-c$ ./test12.x Ed
+Hello
+./test12.x
+Ed
+\end{verbatim}
+
+The command \verb|(display (arg 0))| displays the identifier
+of the executable file, which is \verb|test12.x| in the present
+case.
+
+The command \verb|(display (arg 1))| prints the first argument,
+which is Ed, the name of the person that executed the program.
+
+
+\section{Loops}
+As you learned in the previous section,
+Might Scheme possesses primitive functions, which
+use operations that map closely to machine
+instructions. These operations are the arithmetic
+calculations and predicates. In
+a {\em define-form}, identifiers that start with
+f, g and h represent machine floating point
+numbers, while identifiers prefixed with i, j
+and k indicate integer numbers.
+
+\begin{figure}[!h]
+\begin{verbatim}
+;;; File: examples/test11.scm
+(define (floopsum env ix sx facc)
+    (if (null? sx) facc
+        (floopsum env (- ix 1) (cdr sx)
+              (+ (f(car sx)) facc)) ))
+
+(define (floop env ix fy)
+      (if (< ix 1) fy
+          (floop env (- ix 1) (+ fy 0.1)) ))
+
+(define (fadd fx fy) (+ fx fy))
+
+(letrec
+    [(xx 41.0)]
+  (begin (display (fadd xx 12.5))
+     (display (floop 1000000 0.0)) ))
+
+
+~/wasCm/s03-to-c$ bigloo -s
+
+1:=> (load "scm2c.sch")
+scm2c.sch
+1:=> (compit "examples/test11.scm" "test11.c")
+#unspecified
+1:=> (exit)
+~/wasCm/s03-to-c$ gcc -O3 test11.c -o test11.x
+~/wasCm/s03-to-c$ ./test11.x 
+53.5000
+100000.0000
+\end{verbatim}
+\caption{Primitive function with a loop}
+\label{fig:floop}
+\end{figure}
+
+
+Primitive functions are used mainly to define
+efficient loops, or repetitions.
+In \verb|examples/test11.txt|, the
+\verb|(floop env ix fy)| performs the accumulation
+\verb|(+ fy 0.1)| one million times, as one
+can see in listing~\ref{fig:floop}.
+
+The designers of Might Scheme could easily have removed the
+\verb|env| argument in the definition of floop and floopsum.
+However, they decided leave an explicit env variable to make
+it clear that primitive functions have calling conventions that
+are different from functional applications.
+
+Lists can be built as a sequence of nested cons. However,
+Might Scheme offers a more convenient method of creating
+a list, which is to prefix the list with the single quote symbol.
+In file \verb|examples/consin.scm|, the floopsum function adds the
+elements of the \verb|'(4 5 6 7)| list, which was defined through the
+single quote prefix. In Might Scheme, a preprocessor replaces
+this list with:
+\begin{verbatim}
+(cons 4 (cons 5 (cons 6 (cons 7 #f)) ))
+\end{verbatim}
+where there is a cons call for each element of the list. An important
+observation: In Might Scheme, the semantic of lists prefixed by the
+single quote symbol is different from Standard Scheme, where
+identifier symbols are not replaced by its value. Might Scheme,
+tries to replace any identifier by its value, and produces an error
+if the identifier is not defined.
+
+In primitive functions, pairs and lists are represented by the same
+type of values that one uses in normal functions. However, Might
+Scheme uses the internal representation of the underlying machine
+for integer and floating point numbers. This means that if a primitive
+function needs to perform an arithmetic operation in a list element,
+it must convert the list element to the machine representation. This
+conversion is performed by the f function. In the examples/consin.scm
+program, \verb|(+ (f(car sx)) facc)| converts the \verb|(car sx)|
+element to machine representation, before adding it to facc. 
+
+n the snippet examples/cons.scm, the value of the xx variable is 42.
+When Might Scheme builds the list \verb|'(xx (80 90 45.5) 56)|,
+it substitutes the value 42 for \verb|xx|, and
+prints \verb|(42 (80 90 45.5) 56)|. This is not the
+normal behavior of standard Scheme, but makes it easier to represent
+the structure of web documents as nested lists. Besides this, the
+semantic of Might Scheme is simpler than the semantic of other
+dialects of Lisp, since Might Scheme only accepts symbols
+with well defined values, and always replaces the symbol by its value.
+
+
+
+
+
+
+\chapter*{Readme.md}
+
+WebAssembly is an Instruction Set Architecture (ISA) for
 a stack machine that can run in most modern browsers.
 Therefore, WebAssembly allows the web designer to
 customize the experience of the client, who is using
@@ -2728,8 +3374,6 @@ into an html page, that you can open with a browser.
 The other is to use the node runtime.
 Listing~\ref{wasm:tailfibclient} was designed for the
 node option.\index{WebAssembly!node}
-
-
 
 
 
