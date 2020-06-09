@@ -1,3 +1,6 @@
+;; Test read sexpr from string,
+;; string concatenation, substring and
+;; other string operations
 (letrec [(xx "Rose of Luxemburg")
          (yy "Anna Bolena")
 	 (str "(cost 42.5)")

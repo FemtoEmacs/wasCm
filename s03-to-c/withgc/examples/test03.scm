@@ -1,4 +1,3 @@
-;; Compiled with guile
 (letrec 
   [ (f03 (lambda(x y) (if (<fx x 5) 42 (*fx x x y)) ))
     (f04 (lambda(x y) (if (<=fx x 5) 42 (*fx x y)) ))

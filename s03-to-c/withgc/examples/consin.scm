@@ -1,4 +1,4 @@
-
+;; Test primitive operations with list
 (define (floopsum env ix sx facc)
     (if (null? sx) facc
         (floopsum env (- ix 1) (cdr sx)

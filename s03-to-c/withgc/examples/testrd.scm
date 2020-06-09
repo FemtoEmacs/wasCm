@@ -1,3 +1,5 @@
+;; Test tail call optimization in
+;; primitive functions.
 
 (define (floopsum env ix sx facc)
     (if (null? sx) facc
