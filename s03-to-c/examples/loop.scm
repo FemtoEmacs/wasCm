@@ -1,3 +1,4 @@
+;; Test large loops in primitive functions
 (letrec
   [(loop (lambda(i n)
            (if (<fx i 1) n

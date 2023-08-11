@@ -1,4 +1,4 @@
-;; Compiled with guile
+;; Test define-form
 
 (define str "Rose")
 

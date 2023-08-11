@@ -1,3 +1,4 @@
+;; Test string predicates
 (letrec [(xx "Rose")
          (zz "Rose")
          (yy "Hippatia")]

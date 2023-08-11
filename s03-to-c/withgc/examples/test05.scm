@@ -1,4 +1,3 @@
-;; Compiled with guile
 (letrec
   [(xx (cons 3 4))
    (fn (lambda(x y) (if (>fx x 9) 42 (+fx x y)) ))]
